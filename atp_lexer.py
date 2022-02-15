@@ -1,8 +1,11 @@
+from tkinter import END
 from typing import Iterable, List, Type, Tuple
 from enum import Enum
 import re
 
 class TokensEnum(Enum):
+    '''Tokens taken from https://public.support.unisys.com/aseries/docs/clearpath-mcp-17.0/pdf/86000080-103.pdf'''
+    # Special Tokens
     EQUALS    = "="
     ADD       = "+"
     SUBS      = "-"
@@ -22,6 +25,17 @@ class TokensEnum(Enum):
     BRACKET_RIGHT      = "]"
     VARIABLE           = "^[a-zA-Z]+$"
     INTEGER            = "^[0-9]+$"
+    # Reserved Words
+    IF       = "IF",
+    ELSE     = "ELSE",
+    THEN     = "THEN",
+    BEGIN    = "BEGIN",
+    END      = "END",
+    VAR      = "VAR",
+    REPEAT   = "REPEAT",
+    WHILE    = "WHILE",
+    PROGRAM  = "PROGRAM",
+    FUNCTION = "FUNCTION"
 
 class Token(object):
     '''The Token object keeps track of all the available tokens, it also keeps track 
@@ -41,6 +55,7 @@ class Token(object):
 def toToken(input : str, position : Tuple[int, int]) -> Type[Enum]:
     '''This function takes a single word as input and turns it into a token.'''
     match input:
+        # Special Tokens
         case "=" | ":=":
             return Token(TokensEnum.EQUALS, "=", position)
         case "+":
@@ -74,7 +89,29 @@ def toToken(input : str, position : Tuple[int, int]) -> Type[Enum]:
         case "[":
             return Token(TokensEnum.BRACKET_LEFT,  "[", position)
         case "]":
-            return Token(TokensEnum.BRACKET_RIGHT, "]", position)  
+            return Token(TokensEnum.BRACKET_RIGHT, "]", position)
+        # Reserved Words
+        case "IF":
+            return Token(TokensEnum.IF, "IF", position)
+        case "ELSE":
+            return Token(TokensEnum.ELSE, "ELSE", position)
+        case "THEN":
+            return Token(TokensEnum.THEN, "THEN", position)
+        case "BEGIN":
+            return Token(TokensEnum.BEGIN, "BEGIN", position)
+        case "END":
+            return Token(TokensEnum.END, "END", position)
+        case "VAR":
+            return Token(TokensEnum.VAR, "VAR", position)
+        case "REPEAT":
+            return Token(TokensEnum.REPEAT, "REPEAT", position)
+        case "WHILE":
+            return Token(TokensEnum.WHILE, "WHILE", position)
+        case "PROGRAM":
+            return Token(TokensEnum.PROGRAM, "PROGRAM", position)
+        case "FUNCTION":
+            return Token(TokensEnum.FUNCTION, "FUNCTION", position)
+
         case _:
             if re.match("^[0-9]+$", input):
                 return Token(TokensEnum.INTEGER, input, position)
