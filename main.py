@@ -12,8 +12,8 @@ parser.add_argument("-f", "--file", required=True, type=str, help="Filepath to a
 args = parser.parse_args()
 
 with open(args.file, 'r') as file:
-    lines = [(index+1, line.strip()) for index, line in enumerate(file)]
+    lines = [(index+1, line.replace("\n", "")) for index, line in enumerate(file)]
 
-tokens = tokenize(lines, [])
+tokens = tokenize(lines)
 for token in tokens:
     print(token)
