@@ -14,8 +14,8 @@ class TokensEnum(Enum):
     COMMA     = ","
     DOUBLEDOT = ":"
     SEMICOLON = ";"
-    RB_LEFT   = "("
-    RB_RIGHT  = ")"
+    LPAREN    = "("
+    RPAREN    = ")"
     LCOMMENT  = "{"
     RCOMMENT  = "}"
     COMMENT   = "{}"
@@ -27,7 +27,7 @@ class TokensEnum(Enum):
     BRACKET_RIGHT      = "]"
     VARIABLE           = "^[a-zA-Z]+$"
     INTEGER            = "^[0-9]+$"
-    
+
     # Reserved Words
     IF       = "IF",
     ELSE     = "ELSE",
@@ -41,9 +41,9 @@ class TokensEnum(Enum):
     FUNCTION = "FUNCTION"
 
 class Token(object):
-    '''The Token object keeps track of all the available tokens, it also keeps track 
+    '''The Token object keeps track of all the available tokens, it also keeps track
        of the position of the tokens and its value.'''
-       
+
     def __init__(self, token_type: Type[TokensEnum], value: str, position: Tuple[int,int]) -> None:
         self.type = token_type
         self.value = value
@@ -55,10 +55,11 @@ class Token(object):
     def __repr__(self) -> str:
         return self.__str__()
 
-def toToken(input : str, position : Tuple[int, int]) -> Type[Enum]:
+def toToken(input: str, position: Tuple[int, int]) -> Type[Enum]:
+    # TODO: add support for parentheses next to variables or integrals
     '''This function takes a single word as input and turns it into a token.'''
     match input:
-        
+
         # Special Tokens
         case "=" | ":=":
             return Token(TokensEnum.EQUALS, "=", position)
@@ -79,9 +80,9 @@ def toToken(input : str, position : Tuple[int, int]) -> Type[Enum]:
         case ";":
             return Token(TokensEnum.SEMICOLON, ";", position)
         case "(":
-            return Token(TokensEnum.RB_RIGHT,  ")", position)
+            return Token(TokensEnum.LPAREN,    "(", position)
         case ")":
-            return Token(TokensEnum.RB_LEFT,   "(", position)
+            return Token(TokensEnum.RPAREN,    ")", position)
         case "<":
             return Token(TokensEnum.LESS_THAN, "<", position)
         case ">":
@@ -94,7 +95,7 @@ def toToken(input : str, position : Tuple[int, int]) -> Type[Enum]:
             return Token(TokensEnum.BRACKET_LEFT,  "[", position)
         case "]":
             return Token(TokensEnum.BRACKET_RIGHT, "]", position)
-        
+
         # Reserved Words
         case "IF":
             return Token(TokensEnum.IF, "IF", position)
@@ -121,22 +122,22 @@ def toToken(input : str, position : Tuple[int, int]) -> Type[Enum]:
         case input if "{" in input and "}" in input:
             return Token(TokensEnum.COMMENT, input, position)
         case input if "{" in input:
-            return Token(TokensEnum.LCOMMENT, input, position)
+            return Token(TokensEnum.LCOMMENT, input[:1], position)
         case input if "}" in input:
-            return Token(TokensEnum.RCOMMENT, input, position)
-        
+            return Token(TokensEnum.RCOMMENT, input[-1:], position)
+
         # Variable and literals
         case input if re.match("^[0-9]+$", input):
             return Token(TokensEnum.INTEGER, input, position)
         case input if re.match("^[a-zA-Z]+$", input):
             return Token(TokensEnum.VARIABLE, input, position)
-        
+
         # Catch any invalid tokens
         case _:
             raise TypeError(f'Illegal token: {input} on line: {position[0]} token number: {position[1]}')
 
 
-def tokenize(input: List[str]) -> List[Token]:
-    '''This function extracts all the words from a list of lines and it turns them into a list of tokens.'''
+def tokenize(input: List[str]) -> List[List[Token]]:
+    '''This function extracts all the words from a list of lines and it turns them into a list of tokens per line'''
     tokens = [[toToken(key, (line[0], index)) for index, key in enumerate(line[1].split(" "))] for line in input]
     return [token for sublist in tokens for token in sublist] # Flatten List[List[Token]] to List[Token]
