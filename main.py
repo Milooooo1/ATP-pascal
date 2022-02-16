@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from lexer import *
+from parser import *
 import sys, os
 import argparse
 import numpy as np
@@ -17,3 +18,5 @@ with open(args.file, 'r') as file:
 tokens = tokenize(lines)
 for token in tokens:
     print(token)
+    
+Parser(tokens)
