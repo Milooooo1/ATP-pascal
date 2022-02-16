@@ -5,29 +5,44 @@ class AST(object):
     pass
 
 class BinOp(AST):
+    '''
+    Binary operator
+
+    A binary operator needs two operands and an operator
+    Example 1 + 2 where 1 and 2 are the operands and + is the operator
+    '''
     def __init__(self, left: Token, op: Token, right: Token) -> None:
         self.left = left
         self.token = self.op = op
         self.right = right
 
-    def __str__(self):
-        return f"BinOp: LHS: ({self.left}), TOKEN: {self.token.type}, RHS: ({self.right})"
+    def __str__(self) -> str:
+        return f"BinOp: LHS: ({self.left}), OP: {self.token.value}, RHS: ({self.right})"
 
+class UnaryOp(object):
+    '''
+    '''
+    def __init__(self, op: Token, expr: Token) -> None:
+        self.token = self.op = op
+        self.expr = expr
+
+    def __str__(self) -> str:
+        return f"{self.token}"
 class Num(AST):
     def __init__(self, token: Token) -> None:
         self.token = token
         self.value = token.value
 
-    def __str__(self):
-        return f"Num: {self.token.value}"
+    def __str__(self) -> str:
+        return f"{self.token.value}"
 
 class Var(AST):
     def __init__(self, token: Token) -> None:
         self.token = token
         self.value = token.value
 
-    def __str__(self):
-        return "VAR"
+    def __str__(self) -> str:
+        return f"{self.value}"
 
 class Assign(AST):
     def __init__(self, left: Token, op: Token, right: Token) -> None:
@@ -35,8 +50,8 @@ class Assign(AST):
         self.token = self.op = op
         self.right = right
 
-        def __str__(self):
-            return "ASSIGN"
+        def __str__(self) -> str:
+            return f"ASSIGN: {self.right} {self.op} to {self.left}"
 
 class Parser(object):
     def __init__(self, lexed_tokens: List[Token]) -> None:
@@ -57,46 +72,53 @@ class Parser(object):
         else:
             self.error()
 
-    def factor(self) -> AST:
+    def arithmeticExprStart(self) -> AST:
+        '''Construct arithmetic expression starting with integrals or parentheses.'''
         token = self.current_token
         if token.type == TokensEnum.INTEGER:
             self.eat(TokensEnum.INTEGER)
             return Num(token)
         elif token.type == TokensEnum.LPAREN:
             self.eat(TokensEnum.LPAREN)
-            node = self.expr()
+            node = self.arithmeticExpr()
             self.eat(TokensEnum.RPAREN)
             return node
 
-    def term(self) -> AST:
-        node = self.factor()
+    def arithmeticExprHighPrecedence(self) -> AST:
+        '''Construct arithmetic expression with high precedence.'''
 
-        while self.current_token.type in (TokensEnum.MULTP, TokensEnum.DIVIDE):
+        # Arithmetic expression must start with an integral type or precedence declaration.
+        node = self.arithmeticExprStart()
+
+        if self.current_token.type in (TokensEnum.MULTP, TokensEnum.DIVIDE):
             token = self.current_token
             if token.type == TokensEnum.MULTP:
                 self.eat(TokensEnum.MULTP)
             elif token.type == TokensEnum.DIVIDE:
                 self.eat(TokensEnum.DIVIDE)
 
-            node = BinOp(left=node, op=token, right=self.factor())
+            node = BinOp(left=node, op=token, right=self.arithmeticExprStart())
 
-        print(node)
         return node
 
-    def expr(self) -> AST:
-        node = self.term()
+    def arithmeticExpr(self) -> AST:
+        '''Constuct arithmetic expression'''
 
-        while self.current_token.type in (TokensEnum.ADD, TokensEnum.SUBS):
+        # First call higher precedence function
+        node = self.arithmeticExprHighPrecedence()
+
+        # After checking for higher precedence operators
+        # now we can check for lower precedence operators
+        if self.current_token.type in (TokensEnum.ADD, TokensEnum.SUBS):
             token = self.current_token
             if token.type == TokensEnum.ADD:
                 self.eat(TokensEnum.ADD)
             elif token.type == TokensEnum.SUBS:
                 self.eat(TokensEnum.SUBS)
 
-            node = BinOp(left=node, op=token, right=self.term())
+            node = BinOp(left=node, op=token, right=self.arithmeticExprHighPrecedence())
 
-        print(node)
         return node
 
     def parseLine(self):
-        return self.expr()
+        return self.arithmeticExpr()

@@ -19,5 +19,6 @@ lexedLines = tokenize(lines)
 # [[print(token) for token in tokens] and print() for tokens in lexedLines]
 
 parser = Parser(lexedLines)
-parser.parseLine()
-parser.parseLine()
+print(parser.parseLine())
+print(parser.parseLine())
+print(parser.parseLine())
