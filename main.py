@@ -1,4 +1,3 @@
-#!/usr/bin/python
 from lexer import *
 from parser import *
 import sys, os
@@ -15,8 +14,10 @@ args = parser.parse_args()
 with open(args.file, 'r') as file:
     lines = [(index+1, line.replace("\n", "")) for index, line in enumerate(file)]
 
-tokens = tokenize(lines)
-for token in tokens:
-    print(token)
-    
-Parser(tokens)
+lexedLines = tokenize(lines)
+[print(line) for line in lexedLines]
+# [[print(token) for token in tokens] and print() for tokens in lexedLines]
+
+parser = Parser(lexedLines)
+parser.parseLine()
+parser.parseLine()
