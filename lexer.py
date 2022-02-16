@@ -1,4 +1,4 @@
-from typing import Iterable, List, Type, Tuple
+from typing import List, Type, Tuple
 from enum import Enum
 import re
 
@@ -18,6 +18,7 @@ class TokensEnum(Enum):
     RB_RIGHT  = ")"
     LCOMMENT  = "{"
     RCOMMENT  = "}"
+    COMMENT   = "{}"
     LESS_THAN = "<"
     MORE_THAN = ">"
     LESS_THAN_OR_EQUAL = "<="
@@ -43,7 +44,7 @@ class Token(object):
     '''The Token object keeps track of all the available tokens, it also keeps track 
        of the position of the tokens and its value.'''
        
-    def __init__(self, token_type: Type[Enum], value: str, position: Tuple[int,int]):
+    def __init__(self, token_type: Type[TokensEnum], value: str, position: Tuple[int,int]) -> None:
         self.type = token_type
         self.value = value
         self.position = position
@@ -116,13 +117,23 @@ def toToken(input : str, position : Tuple[int, int]) -> Type[Enum]:
         case "FUNCTION":
             return Token(TokensEnum.FUNCTION, "FUNCTION", position)
 
+        # Comment tokens
+        case input if "{" in input and "}" in input:
+            return Token(TokensEnum.COMMENT, input, position)
+        case input if "{" in input:
+            return Token(TokensEnum.LCOMMENT, input, position)
+        case input if "}" in input:
+            return Token(TokensEnum.RCOMMENT, input, position)
+        
+        # Variable and literals
+        case input if re.match("^[0-9]+$", input):
+            return Token(TokensEnum.INTEGER, input, position)
+        case input if re.match("^[a-zA-Z]+$", input):
+            return Token(TokensEnum.VARIABLE, input, position)
+        
+        # Catch any invalid tokens
         case _:
-            if re.match("^[0-9]+$", input):
-                return Token(TokensEnum.INTEGER, input, position)
-            elif re.match("^[a-zA-Z]+$", input):
-                return Token(TokensEnum.VARIABLE, input, position)
-            else: 
-                raise TypeError(f'Illegal token: {input} on line: {position[0]} token number: {position[1]}')
+            raise TypeError(f'Illegal token: {input} on line: {position[0]} token number: {position[1]}')
 
 
 def tokenize(input: List[str]) -> List[Token]:
