@@ -1,4 +1,3 @@
-from tkinter import END
 from typing import Iterable, List, Type, Tuple
 from enum import Enum
 import re
@@ -17,6 +16,8 @@ class TokensEnum(Enum):
     SEMICOLON = ";"
     RB_LEFT   = "("
     RB_RIGHT  = ")"
+    LCOMMENT  = "{"
+    RCOMMENT  = "}"
     LESS_THAN = "<"
     MORE_THAN = ">"
     LESS_THAN_OR_EQUAL = "<="
@@ -25,6 +26,7 @@ class TokensEnum(Enum):
     BRACKET_RIGHT      = "]"
     VARIABLE           = "^[a-zA-Z]+$"
     INTEGER            = "^[0-9]+$"
+    
     # Reserved Words
     IF       = "IF",
     ELSE     = "ELSE",
@@ -55,6 +57,7 @@ class Token(object):
 def toToken(input : str, position : Tuple[int, int]) -> Type[Enum]:
     '''This function takes a single word as input and turns it into a token.'''
     match input:
+        
         # Special Tokens
         case "=" | ":=":
             return Token(TokensEnum.EQUALS, "=", position)
@@ -90,6 +93,7 @@ def toToken(input : str, position : Tuple[int, int]) -> Type[Enum]:
             return Token(TokensEnum.BRACKET_LEFT,  "[", position)
         case "]":
             return Token(TokensEnum.BRACKET_RIGHT, "]", position)
+        
         # Reserved Words
         case "IF":
             return Token(TokensEnum.IF, "IF", position)

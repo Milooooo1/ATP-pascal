@@ -1,2 +1,4 @@
-# comefrom0x10
-Interpreter and compiler for the comefrom0x10 esolang (https://esolangs.org/wiki/Comefrom0x10)
+# Pascal
+Interpreter and compiler for the Pascal language
+
+[Reference Manual](https://public.support.unisys.com/aseries/docs/clearpath-mcp-17.0/pdf/86000080-103.pdf)

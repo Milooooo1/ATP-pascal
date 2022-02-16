@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from atp_lexer import *
+from lexer import *
 import sys, os
 import argparse
 import numpy as np
