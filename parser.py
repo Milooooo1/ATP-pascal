@@ -19,8 +19,11 @@ class BinOp(AST):
     def __str__(self) -> str:
         return f"BinOp: LHS: ({self.left}), OP: {self.token.value}, RHS: ({self.right})"
 
-class UnaryOp(object):
+class UnaryOp(AST):
     '''
+    Unary operator
+
+    A unary operator only needs one operand to function
     '''
     def __init__(self, op: Token, expr: Token) -> None:
         self.token = self.op = op
@@ -28,7 +31,11 @@ class UnaryOp(object):
 
     def __str__(self) -> str:
         return f"{self.token}"
+
 class Num(AST):
+    '''
+    The Num object takes any literal number
+    '''
     def __init__(self, token: Token) -> None:
         self.token = token
         self.value = token.value
@@ -37,6 +44,9 @@ class Num(AST):
         return f"{self.token.value}"
 
 class Var(AST):
+    '''
+    The Var object takes any variable
+    '''
     def __init__(self, token: Token) -> None:
         self.token = token
         self.value = token.value
@@ -45,7 +55,10 @@ class Var(AST):
         return f"{self.value}"
 
 class Assign(AST):
-    def __init__(self, left: Token, op: Token, right: Token) -> None:
+    '''
+    The assignment operator takes any variable and assigns any num object to it
+    '''
+    def __init__(self, left: Var, op: Token, right: Num) -> None:
         self.left = left
         self.token = self.op = op
         self.right = right
@@ -66,7 +79,7 @@ class Parser(object):
     def error(self) -> Exception:
         raise SyntaxError(f"Invalid syntax on line: {self.current_token.position[0]}, on index {self.current_token.position[1]}")
 
-    def eat(self, token_type):
+    def eat(self, token_type) -> None:
         if self.current_token.type == token_type:
             self.current_token = self.getNextToken()
         else:
