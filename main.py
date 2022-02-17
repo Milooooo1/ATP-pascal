@@ -2,7 +2,6 @@ from lexer import *
 from parser import *
 import sys, os
 import argparse
-import numpy as np
 
 sys.setrecursionlimit(100000)
 
