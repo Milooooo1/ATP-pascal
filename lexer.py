@@ -56,26 +56,26 @@ class Token(object):
     def __repr__(self) -> str:
         return self.__str__()
 
-def toToken(input: str, position: Tuple[int, int]) -> List[Type[Enum]]:
+def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
     '''This function takes a single word as input and turns it into a token.'''
     # TODO: add support for parentheses next to variables or integrals
     match input:
 
         # Special Tokens
         case "=" | ":=":
-            return [Token(TokensEnum.EQUALS, "=", position)]
+            return [Token(TokensEnum.EQUALS,    "=", position)]
         case "+":
-            return [Token(TokensEnum.ADD,    "+", position)]
+            return [Token(TokensEnum.ADD,       "+", position)]
         case "-":
-            return [Token(TokensEnum.SUBS,   "-", position)]
+            return [Token(TokensEnum.SUBS,      "-", position)]
         case "*":
-            return [Token(TokensEnum.MULTP,  "*", position)]
+            return [Token(TokensEnum.MULTP,     "*", position)]
         case "/":
-            return [Token(TokensEnum.DIVIDE, "/", position)]
+            return [Token(TokensEnum.DIVIDE,    "/", position)]
         case ".":
-            return [Token(TokensEnum.DOT,    ".", position)]
+            return [Token(TokensEnum.DOT,       ".", position)]
         case ",":
-            return [Token(TokensEnum.COMMA,  ",", position)]
+            return [Token(TokensEnum.COMMA,     ",", position)]
         case ":":
             return [Token(TokensEnum.DOUBLEDOT, ":", position)]
         case ";":
@@ -84,52 +84,52 @@ def toToken(input: str, position: Tuple[int, int]) -> List[Type[Enum]]:
             return [Token(TokensEnum.LPAREN,    "(", position)]
         case ")":
             return [Token(TokensEnum.RPAREN,    ")", position)]
-        case input if "(" in input:
-            return [[Token(TokensEnum.LPAREN, "(", position)], toToken(input[1:], (position[0], position[1]+1))]
-        case input if ")" in input:
-            return [toToken(input[:-1], (position[0], position[1]+1)), [Token(TokensEnum.RPAREN, ")", position)]]
+        case "[":
+            return [Token(TokensEnum.BRACKET_LEFT,       "[",  position)]
+        case "]":
+            return [Token(TokensEnum.BRACKET_RIGHT,      "]",  position)]
         case "<":
-            return [Token(TokensEnum.LESS_THAN, "<", position)]
+            return [Token(TokensEnum.LESS_THAN,          "<",  position)]
         case ">":
-            return [Token(TokensEnum.MORE_THAN, ">", position)]
+            return [Token(TokensEnum.MORE_THAN,          ">",  position)]
         case "<=":
             return [Token(TokensEnum.LESS_THAN_OR_EQUAL, "<=", position)]
         case ">=":
             return [Token(TokensEnum.MORE_THAN_OR_EQUAL, ">=", position)]
-        case "[":
-            return [Token(TokensEnum.BRACKET_LEFT,  "[", position)]
-        case "]":
-            return [Token(TokensEnum.BRACKET_RIGHT, "]", position)]
 
         # Reserved Words
         case "IF":
-            return [Token(TokensEnum.IF, "IF", position)]
+            return [Token(TokensEnum.IF,       "IF",       position)]
         case "ELSE":
-            return [Token(TokensEnum.ELSE, "ELSE", position)]
+            return [Token(TokensEnum.ELSE,     "ELSE",     position)]
         case "THEN":
-            return [Token(TokensEnum.THEN, "THEN", position)]
+            return [Token(TokensEnum.THEN,     "THEN",     position)]
         case "BEGIN":
-            return [Token(TokensEnum.BEGIN, "BEGIN", position)]
+            return [Token(TokensEnum.BEGIN,    "BEGIN",    position)]
         case "END":
-            return [Token(TokensEnum.END, "END", position)]
+            return [Token(TokensEnum.END,      "END",      position)]
         case "VAR":
-            return [Token(TokensEnum.VAR, "VAR", position)]
+            return [Token(TokensEnum.VAR,      "VAR",      position)]
         case "REPEAT":
-            return [Token(TokensEnum.REPEAT, "REPEAT", position)]
+            return [Token(TokensEnum.REPEAT,   "REPEAT",   position)]
         case "WHILE":
-            return [Token(TokensEnum.WHILE, "WHILE", position)]
+            return [Token(TokensEnum.WHILE,    "WHILE",    position)]
         case "PROGRAM":
-            return [Token(TokensEnum.PROGRAM, "PROGRAM", position)]
+            return [Token(TokensEnum.PROGRAM,  "PROGRAM",  position)]
         case "FUNCTION":
             return [Token(TokensEnum.FUNCTION, "FUNCTION", position)]
 
-        # Comment tokens
+        # Non-whitespace splitted tokens
         case input if "{" in input and "}" in input:
             return [Token(TokensEnum.COMMENT, input, position)]
         case input if "{" in input:
             return [Token(TokensEnum.LCOMMENT, input[:1], position)]
         case input if "}" in input:
             return [Token(TokensEnum.RCOMMENT, input[-1:], position)]
+        case input if "(" in input:
+            return [[Token(TokensEnum.LPAREN,   "(", position)], toToken(input[1:], (position[0], position[1]+1))]
+        case input if ")" in input:
+            return [toToken(input[:-1], (position[0], position[1]+1)), [Token(TokensEnum.RPAREN, ")", position)]]
 
         # Variable and literals
         case input if re.match("^[0-9]+$", input):
