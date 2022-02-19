@@ -76,25 +76,31 @@ class Parser(object):
         self.lexed_tokens = tail
         return head
 
-    def error(self) -> Exception:
-        raise SyntaxError(f"Invalid syntax on line: {self.current_token.position[0]}, on index {self.current_token.position[1]}")
-
-    def eat(self, token_type) -> None:
+    def checkAndAdvance(self, token_type) -> None:
         if self.current_token.type == token_type:
             self.current_token = self.getNextToken()
-        else:
-            self.error()
+
+    def assignmentExpr(self) -> AST:
+        '''Constuct an assignment expression.'''
+        lhs = Var(self.current_token)
+        self.checkAndAdvance(TokensEnum.VARIABLE)
+        token = self.current_token
+        self.checkAndAdvance(TokensEnum.EQUALS)
+        return Assign(lhs, token, self.arithmeticExpr())
 
     def arithmeticExprStart(self) -> AST:
         '''Construct arithmetic expression starting with integrals or parentheses.'''
         token = self.current_token
+        if token.type == TokensEnum.VARIABLE:
+            return self.assignmentExpr()
+            
         if token.type == TokensEnum.INTEGER:
-            self.eat(TokensEnum.INTEGER)
+            self.checkAndAdvance(TokensEnum.INTEGER)
             return Num(token)
         elif token.type == TokensEnum.LPAREN:
-            self.eat(TokensEnum.LPAREN)
+            self.checkAndAdvance(TokensEnum.LPAREN)
             node = self.arithmeticExpr()
-            self.eat(TokensEnum.RPAREN)
+            self.checkAndAdvance(TokensEnum.RPAREN)
             return node
 
     def arithmeticExprHighPrecedence(self) -> AST:
@@ -105,10 +111,7 @@ class Parser(object):
 
         if self.current_token.type in (TokensEnum.MULTP, TokensEnum.DIVIDE):
             token = self.current_token
-            if token.type == TokensEnum.MULTP:
-                self.eat(TokensEnum.MULTP)
-            elif token.type == TokensEnum.DIVIDE:
-                self.eat(TokensEnum.DIVIDE)
+            self.current_token = self.getNextToken()
 
             node = BinOp(left=node, op=token, right=self.arithmeticExprStart())
 
@@ -124,10 +127,7 @@ class Parser(object):
         # now we can check for lower precedence operators
         if self.current_token.type in (TokensEnum.ADD, TokensEnum.SUBS):
             token = self.current_token
-            if token.type == TokensEnum.ADD:
-                self.eat(TokensEnum.ADD)
-            elif token.type == TokensEnum.SUBS:
-                self.eat(TokensEnum.SUBS)
+            self.current_token = self.getNextToken()
 
             node = BinOp(left=node, op=token, right=self.arithmeticExprHighPrecedence())
 
