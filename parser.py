@@ -1,4 +1,4 @@
-from typing import List, Type, Tuple
+from typing import List, Type, Tuple, Union
 from lexer import *
 
 class AST(object):
@@ -63,8 +63,21 @@ class Assign(AST):
         self.token = self.op = op
         self.right = right
 
-        def __str__(self) -> str:
-            return f"ASSIGN: {self.right} {self.op} to {self.left}"
+    def __str__(self) -> str:
+        return f"ASSIGN: {self.left} {self.op.value} {self.right}"
+
+class Confitional(AST): #TODO: check if conditional object also needs a block
+    '''
+    The conditional evaluates the lhs and rhs token with the confitional operator
+    this can be a <,<=,>= or >
+    '''
+    def __init__(self, left: Union[Var, Num], conditional: Token, right: Union[Var, Num]) -> None:
+        self.left = left
+        self.conditional = conditional
+        self.right = right
+
+    def __str__(self) -> str:
+        return f"EVAL: {self.left} {self.conditional.value} {self.right}"
 
 class Parser(object):
     def __init__(self, lexed_tokens: List[Token]) -> None:
