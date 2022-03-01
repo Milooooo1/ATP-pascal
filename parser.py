@@ -107,7 +107,6 @@ class Parser(object):
         head, *tail = self.lexed_tokens
         self.lexed_tokens = tail
         return head
-        
 
     def checkAndAdvance(self, token_type: TokensEnum) -> None:
         if self.current_token.type == token_type:
@@ -116,9 +115,11 @@ class Parser(object):
             print(f"ERROR DIT GAAT NIET GOED BIJ TOKEN: {self.current_token.type} NIET GELIJK AAN: {token_type}" )
 
     def peek(self) -> Token:
+        '''Take a lok at the next element'''
         return self.lexed_tokens[0]
 
     def comment(self, commentList: List[str], token: Token):
+        '''Extract comments'''
         if token.type == TokensEnum.RCOMMENT:
             commentList.append(token.value)
             self.current_token = self.getNextToken()    
@@ -128,6 +129,7 @@ class Parser(object):
         return self.comment(commentList, self.current_token)
 
     def conditionalExpr(self) -> Optional[Conditional]:
+        '''Construct a conditional expression'''
         match self.current_token.type:
             case TokensEnum.VARIABLE:
                 lhs = Var(self.current_token)
@@ -150,6 +152,7 @@ class Parser(object):
         return Assign(lhs, token, self.arithmeticExpr())
 
     def codeBlock(self) -> List[AST]:
+        '''Create a block based on indentations'''
         block = []
         while self.current_token.type == TokensEnum.INDENT:
             self.checkAndAdvance(TokensEnum.INDENT)
@@ -157,6 +160,7 @@ class Parser(object):
         return block
 
     def constructIfElseExpr(self) -> Optional[IfElse]:
+        '''Construct an if else code block.'''
         self.checkAndAdvance(TokensEnum.IF)
         self.checkAndAdvance(TokensEnum.LPAREN)
         conditional = self.conditionalExpr()
