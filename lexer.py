@@ -24,6 +24,7 @@ class TokensEnum(Enum):
     MORE_THAN = ">"
     LESS_THAN_OR_EQUAL = "<="
     MORE_THAN_OR_EQUAL = ">="
+    CONDITIONALS = [LESS_THAN, MORE_THAN, LESS_THAN_OR_EQUAL, MORE_THAN_OR_EQUAL] 
     BRACKET_LEFT       = "["
     BRACKET_RIGHT      = "]"
     VARIABLE           = "^[a-zA-Z]+$"
@@ -33,6 +34,7 @@ class TokensEnum(Enum):
     IF       = "IF",
     ELSE     = "ELSE",
     THEN     = "THEN",
+    INDENT   = "INDENT",
     BEGIN    = "BEGIN",
     END      = "END",
     VAR      = "VAR",
@@ -98,6 +100,8 @@ def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
             return [Token(TokensEnum.MORE_THAN_OR_EQUAL, ">=", position)]
 
         # Reserved Words
+        case "INDENT":
+            return [Token(TokensEnum.INDENT,   "INDENT",   position)]
         case "IF":
             return [Token(TokensEnum.IF,       "IF",       position)]
         case "ELSE":
@@ -121,15 +125,21 @@ def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
 
         # Non-whitespace splitted tokens
         case input if "{" in input and "}" in input:
-            return [Token(TokensEnum.COMMENT, input, position)]
+            return [Token(TokensEnum.LCOMMENT, input[:1], position), 
+                    Token(TokensEnum.VARIABLE, input[1:-1], (position[0], position[1]+1)), 
+                    Token(TokensEnum.RCOMMENT, input[-1:], (position[0], position[1]+2))]
         case input if "{" in input:
-            return [Token(TokensEnum.LCOMMENT, input[:1], position)]
+            return [Token(TokensEnum.LCOMMENT, input[:1], position), 
+                    Token(TokensEnum.VARIABLE, input[1:], (position[0], position[1]+1))]
         case input if "}" in input:
-            return [Token(TokensEnum.RCOMMENT, input[-1:], position)]
+            return [Token(TokensEnum.VARIABLE, input[:-1], position), 
+                    Token(TokensEnum.RCOMMENT, input[-1:], (position[0], position[1]+1))]
         case input if "(" in input:
-            return [[Token(TokensEnum.LPAREN,   "(", position)], toToken(input[1:], (position[0], position[1]+1))]
+            return [[Token(TokensEnum.LPAREN,   "(", position)], 
+                    toToken(input[1:], (position[0], position[1]+1))]
         case input if ")" in input:
-            return [toToken(input[:-1], (position[0], position[1]+1)), [Token(TokensEnum.RPAREN, ")", position)]]
+            return [toToken(input[:-1], (position[0], position[1]+1)), 
+                    [Token(TokensEnum.RPAREN, ")", position)]]
 
         # Variable and literals
         case input if re.match("^[0-9]+$", input):
@@ -139,7 +149,7 @@ def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
 
         # Catch any invalid tokens
         case _:
-            raise TypeError(f'Illegal token: {input} on line: {position[0]} token number: {position[1]}')
+            raise TypeError(f'Illegal token: {repr(input)} on line: {position[0]} token number: {position[1]}')
 
 def flatten(lst: List) -> Token:
     if isinstance(lst, Token):
