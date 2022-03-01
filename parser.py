@@ -151,13 +151,13 @@ class Parser(object):
         self.checkAndAdvance(TokensEnum.EQUALS)
         return Assign(lhs, token, self.arithmeticExpr())
 
-    def codeBlock(self) -> List[AST]:
+    def codeBlock(self, blockLst: List[AST]) -> List[AST]:
         '''Create a block based on indentations'''
-        block = []
-        while self.current_token.type == TokensEnum.INDENT:
-            self.checkAndAdvance(TokensEnum.INDENT)
-            block.append(self.arithmeticExpr())
-        return block
+        if self.current_token.type != TokensEnum.INDENT:
+            return blockLst
+        self.checkAndAdvance(TokensEnum.INDENT)
+        blockLst.append(self.arithmeticExpr())
+        return self.codeBlock(blockLst)
 
     def constructIfElseExpr(self) -> Optional[IfElse]:
         '''Construct an if else code block.'''
@@ -166,11 +166,11 @@ class Parser(object):
         conditional = self.conditionalExpr()
         self.checkAndAdvance(TokensEnum.RPAREN)
         self.checkAndAdvance(TokensEnum.THEN)
-        ifBlock = self.codeBlock()
+        ifBlock = self.codeBlock([])
         elseBlock = []
         if self.current_token.type == TokensEnum.ELSE:
             self.checkAndAdvance(TokensEnum.ELSE)
-            elseBlock = self.codeBlock()
+            elseBlock = self.codeBlock([])
         return IfElse(conditional, ifBlock, elseBlock)
 
     def arithmeticExprStart(self) -> AST:
