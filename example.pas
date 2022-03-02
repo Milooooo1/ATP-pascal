@@ -11,7 +11,15 @@ IF (a < 0) THEN
     a = 2
     a + 2
 ELSE
+    IF (b > 2) THEN
+        a = 0
+    ELSE
+        c = 2
     b + 2
     b = 2
 {seperator}
+function MyFunction(a, b): integer;
+begin
+    a = a + 1
+end;
 {seperator}
