@@ -40,6 +40,7 @@ def main():
     print(parser.parseLine())
     print(parser.parseLine())
     print(parser.parseLine())
+    print(parser.parseLine())
 
 if __name__ == "__main__":
     main()
