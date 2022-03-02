@@ -90,6 +90,17 @@ class IfElse(AST):
         n = "\n\t"
         return f"IF ({self.condition}):\n\t{n.join(str(line) for line in self.block)} \nELSE: \n\t{n.join(str(line) for line in self.elseNode)}"
 
+class Func(AST):
+    def __init__(self, funcName: str, argList: List[Token], beginToken: Token, funcCodeBlock: List[AST], endToken: Token, returnType: Token) -> None:
+        self.funcName = funcName
+        self.beginToken = beginToken
+        self.funcCodeBlock = funcCodeBlock
+        self.endToken = endToken
+        self.returnType = returnType
+
+    def __str__(self) -> str:
+        return f"FUNCTION ({self.funcName.value}) RETURN TYPE: ({self.returnType.value}) AND FUNCTION BLOCK: {[str(entry) for entry in self.funcCodeBlock]}"
+
 class Comment(AST):
     def __init__(self, comment: List[str]) -> None:
         self.commentLst = comment
@@ -112,7 +123,7 @@ class Parser(object):
         if self.current_token.type == token_type:
             self.current_token = self.getNextToken()
         else:
-            print(f"ERROR DIT GAAT NIET GOED BIJ TOKEN: {self.current_token.type} NIET GELIJK AAN: {token_type}" )
+            print(f"ERROR: {self.current_token.type} != {token_type} ON: {self.current_token.position}")
 
     def peek(self) -> Token:
         '''Take a lok at the next element'''
@@ -173,6 +184,36 @@ class Parser(object):
             elseBlock = self.codeBlock([])
         return IfElse(conditional, ifBlock, elseBlock)
 
+    def constructArgList(self, argList: List[Token] = []) -> List[Token]:
+        if self.current_token.type == TokensEnum.RPAREN:
+            self.checkAndAdvance(TokensEnum.RPAREN)
+            return argList
+
+        argList.append(self.current_token)
+        self.checkAndAdvance(TokensEnum.VARIABLE)
+        if self.current_token.type == TokensEnum.COMMA:
+            self.checkAndAdvance(TokensEnum.COMMA)
+        return self.constructArgList(argList)
+
+    def constructFunction(self) -> Optional[Func]:
+        '''Construct a function AST class'''
+        self.checkAndAdvance(TokensEnum.FUNCTION)
+        funcName = self.current_token
+        self.checkAndAdvance(TokensEnum.VARIABLE)
+        self.checkAndAdvance(TokensEnum.LPAREN)
+        argList = self.constructArgList()
+        self.checkAndAdvance(TokensEnum.DOUBLEDOT)
+        returnType = self.current_token
+        self.current_token = self.getNextToken()
+        self.checkAndAdvance(TokensEnum.SEMICOLON)
+        beginToken = self.current_token
+        self.checkAndAdvance(TokensEnum.BEGIN)
+        codeBlock = self.codeBlock([])
+        endToken = self.current_token
+        self.checkAndAdvance(TokensEnum.END)
+        self.checkAndAdvance(TokensEnum.SEMICOLON)
+        return Func(funcName, argList, beginToken, codeBlock, endToken, returnType)
+
     def arithmeticExprStart(self) -> AST:
         '''Construct arithmetic expression starting with integrals or parentheses.'''
         token = self.current_token
@@ -184,6 +225,9 @@ class Parser(object):
         # Check for any if else statements
         if token.type == TokensEnum.IF:
             return self.constructIfElseExpr()
+
+        if token.type == TokensEnum.FUNCTION:
+            return self.constructFunction()
 
         # Check for any assignment expressions
         if token.type == TokensEnum.VARIABLE and self.peek().type == TokensEnum.EQUALS:
