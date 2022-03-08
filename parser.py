@@ -105,6 +105,14 @@ class Func(AST):
     def __str__(self) -> str:
         return f"FUNCTION ({self.funcName.value}) RETURN TYPE: ({self.returnType.value}) AND FUNCTION BLOCK: {[str(entry) for entry in self.funcCodeBlock]}"
 
+class NoOp(AST):
+    '''No operation'''
+    def __init__(self, token: Token) -> None:
+        self.token = token
+
+    def __str__(self) -> str:
+        return f"Couldn't create an AST with token: {self.token.value}"
+
 class Comment(AST):
     '''Comment object'''
     def __init__(self, comment: List[str]) -> None:
@@ -175,11 +183,11 @@ class Parser(object):
         self.checkAndAdvance(TokensEnum.EQUALS)
         return Assign(lhs, token, self.arithmeticExpr())
 
-    def removeIndentationUntil(self, ctr = 0) -> Token:
-        if self.current_token.type == TokensEnum.INDENT:
-            self.checkAndAdvance(TokensEnum.INDENT)
+    def removeTokenUntil(self, token_type: TokensEnum, ctr = 0) -> Token:
+        if self.current_token.type == token_type:
+            self.checkAndAdvance(token_type)
             ctr += 1
-            return self.removeIndentationUntil(ctr)
+            return self.removeTokenUntil(token_type, ctr)
         else:
             return ctr
 
@@ -187,19 +195,22 @@ class Parser(object):
         '''Create a block based on indentations'''
         if self.current_token.type != TokensEnum.INDENT or self.current_token == TokensEnum.ELSE:
             return blockLst
-        blockLst.append(self.arithmeticExpr())
+        self.removeTokenUntil(TokensEnum.INDENT)
+
+        if self.current_token.type != TokensEnum.ELSE:
+            blockLst.append(self.arithmeticExpr())
         return self.codeBlock(blockLst)
 
     def compoundStatement(self, blockLst: List[AST] = [], endingToken: TokensEnum = TokensEnum.SEMICOLON) -> List[AST]:
         '''This function constructs a code block or compount statement it assumes a BEGIN
         token has been encountered and constructs a code block until an ending token is encountered'''
+        self.removeTokenUntil(TokensEnum.WHITESPACE)
         if self.current_token.type == TokensEnum.END and self.peek().type == endingToken:
             self.checkAndAdvance(TokensEnum.END)
             self.checkAndAdvance(endingToken)
             return blockLst
 
-        op = self.arithmeticExpr()                                                                                                                         # DELETE!
-        blockLst.append(op)
+        blockLst.append(self.arithmeticExpr())
         return self.compoundStatement(blockLst, endingToken)
 
     def constructIfElseExpr(self) -> Optional[IfElse]:
@@ -315,7 +326,7 @@ class Parser(object):
             self.checkAndAdvance(TokensEnum.RPAREN)
             return node
 
-        return f"COULD NOT CREATE A NODE WITH TOKEN: {token}"
+        return NoOp(token)
 
     def arithmeticExprHighPrecedence(self) -> AST:
         '''Construct arithmetic expression with high precedence.'''
