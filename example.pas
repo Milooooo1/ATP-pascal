@@ -18,6 +18,7 @@ VAR
     b : integer;
     c : integer;
 BEGIN
+    aPlusB(6, 5)
     bool = (a < b)
     IF (a < 0) THEN
         a = (10 + a) / 2

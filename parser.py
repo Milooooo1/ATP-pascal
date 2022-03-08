@@ -84,6 +84,15 @@ class IfElse(AST):
         return f"\nIF ({self.condition}):\n\t{[str(i) for i in self.ifBlock]}\
                  \nELSE: \n\t{[str(i) for i in self.elseNode]}\n"
 
+class FuncCall(AST):
+    '''Function call object'''
+    def __init__(self, funcName: str, argList: List[Token]) -> None:
+        self.funcName = funcName
+        self.argList = argList
+
+    def __str__(self):
+        return f"funcCall: {self.funcName} with vars: {[str(i.value) for i in self.argList]}"
+
 class Func(AST):
     '''Function object'''
     def __init__(self, funcName: str, argList: List[Token], varDeclDict: Dict[Var, Token], funcCodeBlock: List[AST], returnType: Token) -> None:
@@ -166,9 +175,9 @@ class Parser(object):
         else:
             print(f"ERROR: {self.current_token.type} != {token_type} ON: {self.current_token.position}")
 
-    def peek(self) -> Token:
+    def peek(self, index = 0) -> Token:
         '''Take a lok at the next element'''
-        return self.lexed_tokens[0]
+        return self.lexed_tokens[index]
 
     def comment(self, commentList: List[str], token: Token):
         '''Extract comments'''
@@ -276,10 +285,17 @@ class Parser(object):
             return argList
 
         argList.append(self.current_token)
-        self.checkAndAdvance(TokensEnum.VARIABLE)
+        self.current_token = self.getNextToken()
         if self.current_token.type == TokensEnum.COMMA:
             self.checkAndAdvance(TokensEnum.COMMA)
         return self.constructArgList(argList)
+
+    def functionCall(self):
+        funcName = self.current_token
+        self.checkAndAdvance(TokensEnum.VARIABLE)
+        self.checkAndAdvance(TokensEnum.LPAREN)
+        argList = self.constructArgList([])
+        return FuncCall(funcName.value, argList)
 
     def constructFuncList(self, funcList: List[Func] = []) -> List[Func]:
         '''Create a list of all functions'''
@@ -344,6 +360,9 @@ class Parser(object):
         # Check for any assignment expressions
         elif token.type == TokensEnum.VARIABLE and self.peek().type == TokensEnum.EQUALS:
             return self.assignmentExpr()
+
+        elif token.type == TokensEnum.VARIABLE and self.peek().type == TokensEnum.LPAREN:
+            return self.functionCall()
 
         # Check for any conditional expressions
         elif token.type in [TokensEnum.VARIABLE, TokensEnum.INTEGER] and self.peek().type.value in TokensEnum.CONDITIONALS.value:
