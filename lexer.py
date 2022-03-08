@@ -43,7 +43,8 @@ class TokensEnum(Enum):
     WHILE      = "WHILE",
     PROGRAM    = "PROGRAM",
     FUNCTION   = "FUNCTION",
-    RT_INTEGER = "INTEGER"
+    RT_INTEGER = "INTEGER",
+    WHITESPACE = " "
 
 class Token(object):
     '''The Token object keeps track of all the available tokens, it also keeps track
@@ -176,6 +177,10 @@ def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
             return [Token(TokensEnum.INTEGER, input, position)]
         case input if re.match("^[a-zA-Z]+$", input):
             return [Token(TokensEnum.VARIABLE, input, position)]
+
+        case '':
+            print("WHITE SPACE")
+            return [Token(TokensEnum.WHITESPACE, input, position)]
 
         # Catch any invalid tokens
         case _:
