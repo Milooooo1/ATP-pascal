@@ -244,7 +244,7 @@ class Parser(object):
         elseBlock = []
         if self.current_token.type == TokensEnum.ELSE:
             self.checkAndAdvance(TokensEnum.ELSE)
-            elseBlock = self.codeBlock([])
+            elseBlock = self.compoundStatement([])
         return IfElse(conditional, ifBlock, elseBlock)
 
     def varDecl(self, varDict: Dict[Var, TokensEnum] = {}):
@@ -313,13 +313,15 @@ class Parser(object):
 
     # END OF HELPER FUNCTIONS
 
-    def arithmeticExprStart(self) -> AST:
+    def arithmeticExprStart(self) -> Optional[AST]:
         '''Construct arithmetic expression starting with integrals or parentheses.'''
         token = self.current_token
 
         if token.type == TokensEnum.INDENT:
             self.checkAndAdvance(TokensEnum.INDENT)
             token = self.current_token
+            if token.type == TokensEnum.END:
+                return None
             return self.arithmeticExpr()
 
         if token.type == TokensEnum.WHITESPACE:

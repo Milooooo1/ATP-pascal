@@ -24,10 +24,11 @@ BEGIN
         a + 2
     ELSE
         (10 + 20) / 2
-        a = 100
         IF (b > 2) THEN
             (2 / 2) < 6
         ELSE
             c = 2
+        END;
+        a = 100
+    END;
 END.
-{EOF}
