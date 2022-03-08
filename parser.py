@@ -1,6 +1,9 @@
-from typing import List, Type, Tuple, Union, Optional
+from typing import List, Dict, Type, Tuple, Union, Optional
 from lexer import *
-import os
+
+# ==========================================================================================================
+#                                               AST OBJECTS
+# ==========================================================================================================
 
 class AST(object):
     pass
@@ -20,19 +23,6 @@ class BinOp(AST):
     def __str__(self) -> str:
         return f"BinOp: LHS: ({self.left}), OP: {self.token.value}, RHS: ({self.right})"
 
-class UnaryOp(AST):
-    '''
-    Unary operator
-
-    A unary operator only needs one operand to function
-    '''
-    def __init__(self, op: Token, expr: Token) -> None:
-        self.token = self.op = op
-        self.expr = expr
-
-    def __str__(self) -> str:
-        return f"{self.token}"
-
 class Num(AST):
     '''
     The Num object takes any literal number
@@ -50,10 +40,21 @@ class Var(AST):
     '''
     def __init__(self, token: Token) -> None:
         self.token = token
-        self.value = token.value
 
     def __str__(self) -> str:
-        return f"VAR: {self.value}"
+        return f"VAR: {self.token.value}"
+
+class Program(AST):
+    '''
+    The Var object takes any variable
+    '''
+    def __init__(self, program_name: str, varDecl: AST, compoundStatement: List[AST]) -> None:
+        self.program_name = program_name
+        self.varDecl = varDecl
+        self.compoundStatement = compoundStatement
+
+    def __str__(self) -> str:
+        return f"PROGRAM: {self.program_name}"
 
 class Assign(AST):
     '''
@@ -81,16 +82,18 @@ class Conditional(AST):
         return f"EVAL: LHS:({self.left}) COND: {self.conditional.value}, RHS:({self.right})"
 
 class IfElse(AST):
+    '''If Else object, if has a conditional and a codeBlock, else just has an code block'''
     def __init__(self, condition: Conditional, block: List[AST], elseNode: Union[AST, None]) -> None:
         self.condition = condition
-        self.block = block
+        self.ifBlock = block
         self.elseNode = elseNode
     
     def __str__(self) -> str:
         n = "\n\t"
-        return f"IF ({self.condition}):\n\t{n.join(str(line) for line in self.block)} \nELSE: \n\t{n.join(str(line) for line in self.elseNode)}"
+        return f"IF ({self.condition}):\n\t{n.join(str(line) for line in self.ifBlock)} \nELSE: \n\t{n.join(str(line) for line in self.elseNode)}"
 
 class Func(AST):
+    '''Function object'''
     def __init__(self, funcName: str, argList: List[Token], beginToken: Token, funcCodeBlock: List[AST], endToken: Token, returnType: Token) -> None:
         self.funcName = funcName
         self.beginToken = beginToken
@@ -102,12 +105,17 @@ class Func(AST):
         return f"FUNCTION ({self.funcName.value}) RETURN TYPE: ({self.returnType.value}) AND FUNCTION BLOCK: {[str(entry) for entry in self.funcCodeBlock]}"
 
 class Comment(AST):
+    '''Comment object'''
     def __init__(self, comment: List[str]) -> None:
         self.commentLst = comment
 
     def __str__(self) -> str:
         comments = " ".join([str(item) for item in self.commentLst[1:-1]]) 
         return f"COMMENT: {comments}"
+
+# ==========================================================================================================
+#                                            PARSER OBJECT
+# ==========================================================================================================
 
 class Parser(object):
     def __init__(self, lexed_tokens: List[Token]) -> None:
@@ -170,6 +178,18 @@ class Parser(object):
         blockLst.append(self.arithmeticExpr())
         return self.codeBlock(blockLst)
 
+    def compoundStatement(self, blockLst: List[AST], endingToken: TokensEnum = TokensEnum.SEMICOLON) -> List[AST]:
+        '''This function constructs a code block or compount statement it assumes a BEGIN 
+        token has been encountered and constructs a code block until an ending token is encountered'''
+        if self.current_token.type != TokensEnum.END and self.current_token.type == endingToken.type:
+            return blockLst
+        
+        if self.current_token.type != TokensEnum.INDENT:
+            self.checkAndAdvance(TokensEnum.INDENT)
+        
+        blockLst.append(self.arithmeticExpr())
+        return self.compoundStatement(blockLst, endingToken)
+
     def constructIfElseExpr(self) -> Optional[IfElse]:
         '''Construct an if else code block.'''
         self.checkAndAdvance(TokensEnum.IF)
@@ -184,7 +204,23 @@ class Parser(object):
             elseBlock = self.codeBlock([])
         return IfElse(conditional, ifBlock, elseBlock)
 
+    def varDecl(self, varDict: Dict[Var, TokensEnum] = {}):
+        '''This function creates a variable declaration block'''
+        if self.current_token.type == TokensEnum.BEGIN:
+            self.checkAndAdvance(TokensEnum.BEGIN)
+            return varDict
+
+        if self.current_token.type == TokensEnum.VAR:
+            var = Var(self.current_token)
+            self.checkAndAdvance(TokensEnum.VAR)
+            self.checkAndAdvance(TokensEnum.DOUBLEDOT)
+            varDict[var] = self.current_token
+            self.current_token = self.getNextToken()
+            self.checkAndAdvance(TokensEnum.SEMICOLON)
+        return self.varDecl(varDict)
+
     def constructArgList(self, argList: List[Token] = []) -> List[Token]:
+        '''This function constructs an argument list which is part of constructing a function'''
         if self.current_token.type == TokensEnum.RPAREN:
             self.checkAndAdvance(TokensEnum.RPAREN)
             return argList
@@ -287,3 +323,12 @@ class Parser(object):
 
     def parseLine(self):
         return self.arithmeticExpr()
+
+    def parseProgram(self):
+        self.checkAndAdvance(TokensEnum.PROGRAM)
+        program_name = self.current_token
+        self.checkAndAdvance(TokensEnum.VARIABLE)
+        self.checkAndAdvance(TokensEnum.SEMICOLON)
+        # Variable declaration
+        # BEGIN ... END.
+        
