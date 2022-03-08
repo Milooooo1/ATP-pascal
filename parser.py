@@ -57,7 +57,7 @@ class Program(AST):
         self.compoundStatement = compoundStatement
 
     def __str__(self) -> str:
-        return f"PROGRAM: \"{self.program_name}\" with {os.linesep}{os.linesep.join(str(i) for i in self.compoundStatement)}"
+        return f"\nPROGRAM: \"{self.program_name}\" with{os.linesep.join(str(i) for i in self.compoundStatement)}"
 
 class Assign(AST):
     '''
@@ -93,7 +93,7 @@ class IfElse(AST):
 
     def __str__(self) -> str:
         n = "\n\t"
-        return f"IF ({self.condition}):\n\t{n.join(str(line) for line in self.ifBlock)} \nELSE: \n\t{n.join(str(line) for line in self.elseNode)}"
+        return f"\nIF ({self.condition}):\n\t{[str(i) for i in self.ifBlock]} \nELSE: \n\t{[str(i) for i in self.elseNode]}\n"
 
 class Func(AST):
     '''Function object'''
@@ -111,8 +111,9 @@ class Comment(AST):
         self.commentLst = comment
 
     def __str__(self) -> str:
-        comments = " ".join([str(item) for item in self.commentLst[1:-1]])
-        return f"COMMENT: {comments}"
+        return ""
+        # comments = " ".join([str(item) for item in self.commentLst[1:-1]])
+        # return f"COMMENT: {comments}"
 
 # ==========================================================================================================
 #                                            PARSER OBJECT
@@ -122,6 +123,7 @@ class Parser(object):
     def __init__(self, lexed_tokens: List[Token]) -> None:
         self.lexed_tokens = lexed_tokens[1:]
         self.current_token = lexed_tokens[0]
+        self.current_indentation = 0
 
     def getNextToken(self) -> Token:
         '''Pop the next token from the fron of the lexed_tokens list'''
@@ -173,11 +175,18 @@ class Parser(object):
         self.checkAndAdvance(TokensEnum.EQUALS)
         return Assign(lhs, token, self.arithmeticExpr())
 
+    def removeIndentationUntil(self, ctr = 0) -> Token:
+        if self.current_token.type == TokensEnum.INDENT:
+            self.checkAndAdvance(TokensEnum.INDENT)
+            ctr += 1
+            return self.removeIndentationUntil(ctr)
+        else:
+            return ctr
+
     def codeBlock(self, blockLst: List[AST]) -> List[AST]:
         '''Create a block based on indentations'''
-        if self.current_token.type != TokensEnum.INDENT:
+        if self.current_token.type != TokensEnum.INDENT or self.current_token == TokensEnum.ELSE:
             return blockLst
-        self.checkAndAdvance(TokensEnum.INDENT)
         blockLst.append(self.arithmeticExpr())
         return self.codeBlock(blockLst)
 
@@ -189,11 +198,7 @@ class Parser(object):
             self.checkAndAdvance(endingToken)
             return blockLst
 
-        if self.current_token.type == TokensEnum.INDENT:
-            self.checkAndAdvance(TokensEnum.INDENT)
-
-        op = self.arithmeticExpr()
-        # print(op)                                                                                                                           # DELETE!
+        op = self.arithmeticExpr()                                                                                                                         # DELETE!
         blockLst.append(op)
         return self.compoundStatement(blockLst, endingToken)
 
@@ -220,7 +225,10 @@ class Parser(object):
         elif self.current_token.type == TokensEnum.INDENT:
             self.checkAndAdvance(TokensEnum.INDENT)
 
-        elif self.current_token.type == TokensEnum.VARIABLE:
+        if self.current_token.type == TokensEnum.WHITESPACE:
+            self.checkAndAdvance(TokensEnum.WHITESPACE)
+
+        if self.current_token.type == TokensEnum.VARIABLE:
             var = Var(self.current_token)
             self.checkAndAdvance(TokensEnum.VARIABLE)
             self.checkAndAdvance(TokensEnum.DOUBLEDOT)
@@ -264,6 +272,16 @@ class Parser(object):
         '''Construct arithmetic expression starting with integrals or parentheses.'''
         token = self.current_token
 
+        if token.type == TokensEnum.INDENT:
+            self.checkAndAdvance(TokensEnum.INDENT)
+            token = self.current_token
+            return self.arithmeticExpr()
+
+        if token.type == TokensEnum.WHITESPACE:
+            self.checkAndAdvance(TokensEnum.WHITESPACE)
+            token = self.current_token
+            return self.arithmeticExpr()
+
         # First remove any comments
         if token.type == TokensEnum.LCOMMENT:
             return self.comment([], token)
@@ -296,6 +314,8 @@ class Parser(object):
             node = self.arithmeticExpr()
             self.checkAndAdvance(TokensEnum.RPAREN)
             return node
+
+        return f"COULD NOT CREATE A NODE WITH TOKEN: {token}"
 
     def arithmeticExprHighPrecedence(self) -> AST:
         '''Construct arithmetic expression with high precedence.'''
