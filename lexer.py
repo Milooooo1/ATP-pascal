@@ -179,7 +179,6 @@ def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
             return [Token(TokensEnum.VARIABLE, input, position)]
 
         case '':
-            print("WHITE SPACE")
             return [Token(TokensEnum.WHITESPACE, input, position)]
 
         # Catch any invalid tokens
