@@ -47,18 +47,6 @@ class Var(AST):
     def __str__(self) -> str:
         return f"VAR: {self.value}"
 
-class Program(AST):
-    '''
-    The Var object takes any variable
-    '''
-    def __init__(self, programName: str, varDecl: AST, compoundStatement: List[AST]) -> None:
-        self.program_name = programName.value
-        self.varDecl = varDecl
-        self.compoundStatement = compoundStatement
-
-    def __str__(self) -> str:
-        return f"\nPROGRAM: \"{self.program_name}\" with{os.linesep.join(str(i) for i in self.compoundStatement)}"
-
 class Assign(AST):
     '''
     The assignment operator takes any variable and assigns any num object to it
@@ -93,17 +81,39 @@ class IfElse(AST):
 
     def __str__(self) -> str:
         n = "\n\t"
-        return f"\nIF ({self.condition}):\n\t{[str(i) for i in self.ifBlock]} \nELSE: \n\t{[str(i) for i in self.elseNode]}\n"
+        return f"\nIF ({self.condition}):\n\t{[str(i) for i in self.ifBlock]}\
+                 \nELSE: \n\t{[str(i) for i in self.elseNode]}\n"
 
 class Func(AST):
     '''Function object'''
-    def __init__(self, funcName: str, argList: List[Token], funcCodeBlock: List[AST], returnType: Token) -> None:
-        self.funcName = funcName
+    def __init__(self, funcName: str, argList: List[Token], varDeclDict: Dict[Var, Token], funcCodeBlock: List[AST], returnType: Token) -> None:
+        self.funcName = funcName.value
+        self.argList = argList
+        self.varDeclDict = varDeclDict
         self.funcCodeBlock = funcCodeBlock
         self.returnType = returnType
 
     def __str__(self) -> str:
-        return f"FUNCTION ({self.funcName.value}) RETURN TYPE: ({self.returnType.value}) AND FUNCTION BLOCK: {[str(entry) for entry in self.funcCodeBlock]}"
+        return f"FUNCTION \"{self.funcName}\" \
+            \n\tDECLARED VARS {[str(str(i.value) + str(' = ') + str(self.varDeclDict[i].value)) for i in self.varDeclDict.keys()]}\
+            \n\tRETURN TYPE: ({self.returnType.value}) \
+            \n\tAND FUNCTION BLOCK: {[str(entry) for entry in self.funcCodeBlock]}"
+
+class Program(AST):
+    '''
+    The Var object takes any variable
+    '''
+    def __init__(self, programName: str, varDecl: AST, functionsList: List[Func], compoundStatement: List[AST]) -> None:
+        self.program_name = programName.value
+        self.varDeclDict = varDecl
+        self.funcList = functionsList
+        self.compoundStatement = compoundStatement
+
+    def __str__(self) -> str:
+        return f"\nPROGRAM: \"{self.program_name}\" \
+            \nDECLARED VARS {[str(str(i.value) + str(' = ') + str(self.varDeclDict[i].value)) for i in self.varDeclDict.keys()]} \
+            \nDECLARED FUNCTIONS: {[str(i.funcName) for i in self.funcList]}\
+            \nMAIN BODY:\n{os.linesep.join(str(i) for i in self.compoundStatement)}"
 
 class NoOp(AST):
     '''No operation'''
@@ -135,14 +145,24 @@ class Parser(object):
 
     def getNextToken(self) -> Token:
         '''Pop the next token from the fron of the lexed_tokens list'''
-        head, *tail = self.lexed_tokens
-        self.lexed_tokens = tail
-        return head
+        if len(self.lexed_tokens) == 1:
+            return self.lexed_tokens[0]
+        else:
+            head, *tail = self.lexed_tokens
+            self.lexed_tokens = tail
+            return head
 
     def checkAndAdvance(self, token_type: TokensEnum) -> None:
         '''Check if the given token is actually the current token before advancing'''
         if self.current_token.type == token_type:
             self.current_token = self.getNextToken()
+            
+            if self.current_token.type == TokensEnum.LCOMMENT:
+                self.comment([], self.current_token)
+
+            if self.current_token.type == TokensEnum.WHITESPACE:
+                self.removeTokenUntil(TokensEnum.WHITESPACE)
+
         else:
             print(f"ERROR: {self.current_token.type} != {token_type} ON: {self.current_token.position}")
 
@@ -261,6 +281,13 @@ class Parser(object):
             self.checkAndAdvance(TokensEnum.COMMA)
         return self.constructArgList(argList)
 
+    def constructFuncList(self, funcList: List[Func] = []) -> List[Func]:
+        '''Create a list of all functions'''
+        if self.current_token.type != TokensEnum.FUNCTION:
+            return funcList
+        funcList.append(self.constructFunction())
+        return self.constructFuncList(funcList)
+
     def constructFunction(self) -> Optional[Func]:
         '''Construct a function AST class'''
         self.checkAndAdvance(TokensEnum.FUNCTION)
@@ -272,10 +299,17 @@ class Parser(object):
         returnType = self.current_token
         self.current_token = self.getNextToken()
         self.checkAndAdvance(TokensEnum.SEMICOLON)
-        self.checkAndAdvance(TokensEnum.BEGIN)
+        
+        varDeclDict = {}
+        if self.current_token.type == TokensEnum.VAR:
+            self.checkAndAdvance(TokensEnum.VAR)
+            varDeclDict = self.varDecl(varDeclDict)
+
+        if self.current_token.type == TokensEnum.BEGIN:
+            self.checkAndAdvance(TokensEnum.BEGIN)
         codeBlock = self.compoundStatement([], TokensEnum.SEMICOLON)
 
-        return Func(funcName, argList, codeBlock, returnType)
+        return Func(funcName, argList, varDeclDict, codeBlock, returnType)
 
     # END OF HELPER FUNCTIONS
 
@@ -369,7 +403,11 @@ class Parser(object):
         program_name = self.current_token
         self.checkAndAdvance(TokensEnum.VARIABLE)
         self.checkAndAdvance(TokensEnum.SEMICOLON)
+        self.removeTokenUntil(TokensEnum.WHITESPACE)
+        functionsList = []
+        if self.current_token.type == TokensEnum.FUNCTION:
+            functionsList = self.constructFuncList()
         self.checkAndAdvance(TokensEnum.VAR)
         var_decl = self.varDecl()
         code_block = self.compoundStatement(endingToken = TokensEnum.DOT)
-        return Program(program_name, var_decl, code_block)
+        return Program(program_name, var_decl, functionsList, code_block)
