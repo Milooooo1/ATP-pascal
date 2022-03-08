@@ -3,7 +3,6 @@ VAR
     a : integer;
     b : integer;
     c : integer;
-
 BEGIN
 100 + 200
 (10 + 20) / 2

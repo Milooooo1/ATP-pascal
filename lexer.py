@@ -1,7 +1,7 @@
 from typing import List, Type, Tuple
 from enum import Enum
 from collections.abc import Iterable
-import itertools 
+import itertools
 import re
 
 class TokensEnum(Enum):
@@ -25,7 +25,7 @@ class TokensEnum(Enum):
     MORE_THAN = ">"
     LESS_THAN_OR_EQUAL = "<="
     MORE_THAN_OR_EQUAL = ">="
-    CONDITIONALS = [LESS_THAN, MORE_THAN, LESS_THAN_OR_EQUAL, MORE_THAN_OR_EQUAL] 
+    CONDITIONALS = [LESS_THAN, MORE_THAN, LESS_THAN_OR_EQUAL, MORE_THAN_OR_EQUAL]
     BRACKET_LEFT       = "["
     BRACKET_RIGHT      = "]"
     VARIABLE           = "^[a-zA-Z]+$"
@@ -42,7 +42,7 @@ class TokensEnum(Enum):
     REPEAT     = "REPEAT",
     WHILE      = "WHILE",
     PROGRAM    = "PROGRAM",
-    FUNCTION   = "FUNCTION", 
+    FUNCTION   = "FUNCTION",
     RT_INTEGER = "INTEGER"
 
 class Token(object):
@@ -129,37 +129,46 @@ def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
 
         # Non-whitespace splitted tokens
         case input if "{" in input and "}" in input:
-            return [Token(TokensEnum.LCOMMENT, input[:1], position), 
-                    Token(TokensEnum.VARIABLE, input[1:-1], (position[0], position[1]+1)), 
-                    Token(TokensEnum.RCOMMENT, input[-1:], (position[0], position[1]+2))]
+            return [Token(TokensEnum.LCOMMENT, input[:1],    position),
+                    Token(TokensEnum.VARIABLE, input[1:-1], (position[0], position[1]+1)),
+                    Token(TokensEnum.RCOMMENT, input[-1:],  (position[0], position[1]+2))]
+
         case input if "{" in input:
-            return [Token(TokensEnum.LCOMMENT, input[:1], position), 
-                    Token(TokensEnum.VARIABLE, input[1:], (position[0], position[1]+1))]
+            return [Token(TokensEnum.LCOMMENT, input[:1],    position),
+                    Token(TokensEnum.VARIABLE, input[1:],   (position[0], position[1]+1))]
+
         case input if "}" in input:
-            return [Token(TokensEnum.VARIABLE, input[:-1], position), 
-                    Token(TokensEnum.RCOMMENT, input[-1:], (position[0], position[1]+1))]
+            return [Token(TokensEnum.VARIABLE, input[:-1],   position),
+                    Token(TokensEnum.RCOMMENT, input[-1:],  (position[0], position[1]+1))]
+
         case input if "(" in input:
             if input.find("(") != 0:
-                return [toToken(input[:input.find("(")], position),
-                        Token(TokensEnum.LPAREN, "(", (position[0], position[1]+1)), 
-                        toToken(input[input.find("(")+1:], (position[0], position[1]+2))]
+                return [toToken(input[:input.find("(")],     position),
+                        Token(TokensEnum.LPAREN, "(",       (position[0], position[1]+1)),
+                        toToken(input[input.find("(")+1:],  (position[0], position[1]+2))]
             else:
-                return [Token(TokensEnum.LPAREN, "(", position), 
+                return [Token(TokensEnum.LPAREN, "(",        position),
                          toToken(input[input.find("(")+1:], (position[0], position[1]+1))]
+
         case input if ")" in input:
             if input.find(")") != (len(input)-1):
-                return [toToken(input[:input.find(")")], position),
-                       Token(TokensEnum.RPAREN, ")", (position[0], position[1]+1)), 
+                return [toToken(input[:input.find(")")],    position),
+                        Token(TokensEnum.RPAREN, ")",      (position[0], position[1]+1)),
                         toToken(input[input.find(")")+1:], (position[0], position[1]+2))]
             else:
-                return [toToken(input[:input.find(")")], position), 
-                       Token(TokensEnum.RPAREN, ")", (position[0], position[1]+1))]
+                return [toToken(input[:input.find(")")],    position),
+                        Token(TokensEnum.RPAREN, ")",      (position[0], position[1]+1))]
+
         case input if "," in input:
-            print("HERE: " + input)
-            return [toToken(input[:input.find(",")], position), 
-                   [Token(TokensEnum.COMMA,     input[input.find(","):], (position[0], position[1]+1))]]
+            return [toToken(input[:input.find(",")], position),
+                   [Token(TokensEnum.COMMA, input[input.find(","):], (position[0], position[1]+1))]]
+
+        case input if "." in input:
+            return [toToken(input[:input.find(".")], position),
+                   [Token(TokensEnum.DOT, input[input.find("."):], (position[0], position[1]+1))]]
+
         case input if ";" in input:
-            return [toToken(input[:input.find(";")], position), 
+            return [toToken(input[:input.find(";")], position),
                    [Token(TokensEnum.SEMICOLON, input[input.find(";"):], (position[0], position[1]+1))]]
 
         # Variable and literals
@@ -171,17 +180,17 @@ def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
         # Catch any invalid tokens
         case _:
             raise TypeError(f'Illegal token: {repr(input)} on line: {position[0]} token number: {position[1]}')
-    
+
 def flatten(lst: List) -> Token:
     if isinstance(lst, Token):
         return lst
-        
+
     if len(lst) == 1:
         return lst[0]
-    
+
     head, *tail = lst
     return head + flatten(tail)
-    
+
 def recFlatten(x):
     res = []
     def loop(y):
@@ -194,6 +203,6 @@ def recFlatten(x):
     return res
 
 def tokenize(input: List[str]) -> List[Token]:
-    '''This function extracts all the words from a list of lines and it turns them into a list of tokens per line''' 
+    '''This function extracts all the words from a list of lines and it turns them into a list of tokens per line'''
     tokens = [[[entry for entry in recFlatten(toToken(key, (line[0], index)))] for index, key in enumerate(line[1].split(" "))] for line in input]
     return list(itertools.chain.from_iterable([[flatten(k) for k in token] for sublist in tokens for token in sublist]))

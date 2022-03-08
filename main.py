@@ -29,18 +29,9 @@ def main():
     # [[print(token) for token in tokens] and print() for tokens in lexedLines]
 
     parser = Parser(lexedLines)
-    print(parser.parseLine())
-    print(parser.parseLine())
-    print(parser.parseLine())
-    print(parser.parseLine())
-    print(parser.parseLine())
-    print(parser.parseLine())
-    print(parser.parseLine())
-    print(parser.parseLine())
-    print(parser.parseLine())
-    print(parser.parseLine())
-    print(parser.parseLine())
-    print(parser.parseLine())
+    PascalAST = parser.parseProgram()
+    print(PascalAST)
+
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,7 @@
+from token import DOT
 from typing import List, Dict, Type, Tuple, Union, Optional
 from lexer import *
+import os
 
 # ==========================================================================================================
 #                                               AST OBJECTS
@@ -40,21 +42,22 @@ class Var(AST):
     '''
     def __init__(self, token: Token) -> None:
         self.token = token
+        self.value = token.value
 
     def __str__(self) -> str:
-        return f"VAR: {self.token.value}"
+        return f"VAR: {self.value}"
 
 class Program(AST):
     '''
     The Var object takes any variable
     '''
-    def __init__(self, program_name: str, varDecl: AST, compoundStatement: List[AST]) -> None:
-        self.program_name = program_name
+    def __init__(self, programName: str, varDecl: AST, compoundStatement: List[AST]) -> None:
+        self.program_name = programName.value
         self.varDecl = varDecl
         self.compoundStatement = compoundStatement
 
     def __str__(self) -> str:
-        return f"PROGRAM: {self.program_name}"
+        return f"PROGRAM: \"{self.program_name}\" with {os.linesep}{os.linesep.join(str(i) for i in self.compoundStatement)}"
 
 class Assign(AST):
     '''
@@ -66,7 +69,7 @@ class Assign(AST):
         self.right = right
 
     def __str__(self) -> str:
-        return f"ASSIGN: {self.left.value} {self.op.value} {self.right}"
+        return f"ASSIGN: {self.left} {self.op.value} {self.right}"
 
 class Conditional(AST):
     '''
@@ -87,18 +90,16 @@ class IfElse(AST):
         self.condition = condition
         self.ifBlock = block
         self.elseNode = elseNode
-    
+
     def __str__(self) -> str:
         n = "\n\t"
         return f"IF ({self.condition}):\n\t{n.join(str(line) for line in self.ifBlock)} \nELSE: \n\t{n.join(str(line) for line in self.elseNode)}"
 
 class Func(AST):
     '''Function object'''
-    def __init__(self, funcName: str, argList: List[Token], beginToken: Token, funcCodeBlock: List[AST], endToken: Token, returnType: Token) -> None:
+    def __init__(self, funcName: str, argList: List[Token], funcCodeBlock: List[AST], returnType: Token) -> None:
         self.funcName = funcName
-        self.beginToken = beginToken
         self.funcCodeBlock = funcCodeBlock
-        self.endToken = endToken
         self.returnType = returnType
 
     def __str__(self) -> str:
@@ -110,7 +111,7 @@ class Comment(AST):
         self.commentLst = comment
 
     def __str__(self) -> str:
-        comments = " ".join([str(item) for item in self.commentLst[1:-1]]) 
+        comments = " ".join([str(item) for item in self.commentLst[1:-1]])
         return f"COMMENT: {comments}"
 
 # ==========================================================================================================
@@ -123,11 +124,13 @@ class Parser(object):
         self.current_token = lexed_tokens[0]
 
     def getNextToken(self) -> Token:
+        '''Pop the next token from the fron of the lexed_tokens list'''
         head, *tail = self.lexed_tokens
         self.lexed_tokens = tail
         return head
 
     def checkAndAdvance(self, token_type: TokensEnum) -> None:
+        '''Check if the given token is actually the current token before advancing'''
         if self.current_token.type == token_type:
             self.current_token = self.getNextToken()
         else:
@@ -141,7 +144,7 @@ class Parser(object):
         '''Extract comments'''
         if token.type == TokensEnum.RCOMMENT:
             commentList.append(token.value)
-            self.current_token = self.getNextToken()    
+            self.current_token = self.getNextToken()
             return Comment(commentList)
         commentList.append(token.value)
         self.current_token = self.getNextToken()
@@ -156,12 +159,12 @@ class Parser(object):
             case TokensEnum.INTEGER:
                 lhs = Num(self.current_token)
                 self.checkAndAdvance(TokensEnum.INTEGER)
-        
+
         token = self.current_token
         self.current_token = self.getNextToken()
 
         return Conditional(lhs, token, self.arithmeticExpr())
-    
+
     def assignmentExpr(self) -> Optional[Assign]:
         '''Constuct an assignment expression.'''
         lhs = Var(self.current_token)
@@ -178,16 +181,20 @@ class Parser(object):
         blockLst.append(self.arithmeticExpr())
         return self.codeBlock(blockLst)
 
-    def compoundStatement(self, blockLst: List[AST], endingToken: TokensEnum = TokensEnum.SEMICOLON) -> List[AST]:
-        '''This function constructs a code block or compount statement it assumes a BEGIN 
+    def compoundStatement(self, blockLst: List[AST] = [], endingToken: TokensEnum = TokensEnum.SEMICOLON) -> List[AST]:
+        '''This function constructs a code block or compount statement it assumes a BEGIN
         token has been encountered and constructs a code block until an ending token is encountered'''
-        if self.current_token.type != TokensEnum.END and self.current_token.type == endingToken.type:
+        if self.current_token.type == TokensEnum.END and self.peek().type == endingToken:
+            self.checkAndAdvance(TokensEnum.END)
+            self.checkAndAdvance(endingToken)
             return blockLst
-        
-        if self.current_token.type != TokensEnum.INDENT:
+
+        if self.current_token.type == TokensEnum.INDENT:
             self.checkAndAdvance(TokensEnum.INDENT)
-        
-        blockLst.append(self.arithmeticExpr())
+
+        op = self.arithmeticExpr()
+        # print(op)                                                                                                                           # DELETE!
+        blockLst.append(op)
         return self.compoundStatement(blockLst, endingToken)
 
     def constructIfElseExpr(self) -> Optional[IfElse]:
@@ -210,13 +217,17 @@ class Parser(object):
             self.checkAndAdvance(TokensEnum.BEGIN)
             return varDict
 
-        if self.current_token.type == TokensEnum.VAR:
+        elif self.current_token.type == TokensEnum.INDENT:
+            self.checkAndAdvance(TokensEnum.INDENT)
+
+        elif self.current_token.type == TokensEnum.VARIABLE:
             var = Var(self.current_token)
-            self.checkAndAdvance(TokensEnum.VAR)
+            self.checkAndAdvance(TokensEnum.VARIABLE)
             self.checkAndAdvance(TokensEnum.DOUBLEDOT)
             varDict[var] = self.current_token
             self.current_token = self.getNextToken()
             self.checkAndAdvance(TokensEnum.SEMICOLON)
+
         return self.varDecl(varDict)
 
     def constructArgList(self, argList: List[Token] = []) -> List[Token]:
@@ -242,13 +253,12 @@ class Parser(object):
         returnType = self.current_token
         self.current_token = self.getNextToken()
         self.checkAndAdvance(TokensEnum.SEMICOLON)
-        beginToken = self.current_token
         self.checkAndAdvance(TokensEnum.BEGIN)
-        codeBlock = self.codeBlock([])
-        endToken = self.current_token
-        self.checkAndAdvance(TokensEnum.END)
-        self.checkAndAdvance(TokensEnum.SEMICOLON)
-        return Func(funcName, argList, beginToken, codeBlock, endToken, returnType)
+        codeBlock = self.compoundStatement([], TokensEnum.SEMICOLON)
+
+        return Func(funcName, argList, codeBlock, returnType)
+
+    # END OF HELPER FUNCTIONS
 
     def arithmeticExprStart(self) -> AST:
         '''Construct arithmetic expression starting with integrals or parentheses.'''
@@ -259,21 +269,23 @@ class Parser(object):
             return self.comment([], token)
 
         # Check for any if else statements
-        if token.type == TokensEnum.IF:
+        elif token.type == TokensEnum.IF:
             return self.constructIfElseExpr()
 
-        if token.type == TokensEnum.FUNCTION:
+        # Check for functions
+        elif token.type == TokensEnum.FUNCTION:
             return self.constructFunction()
 
         # Check for any assignment expressions
-        if token.type == TokensEnum.VARIABLE and self.peek().type == TokensEnum.EQUALS:
+        elif token.type == TokensEnum.VARIABLE and self.peek().type == TokensEnum.EQUALS:
             return self.assignmentExpr()
+
         # Check for any conditional expressions
         elif token.type in [TokensEnum.VARIABLE, TokensEnum.INTEGER] and self.peek().type.value in TokensEnum.CONDITIONALS.value:
             return self.conditionalExpr()
 
         # An arithmetic expression can start with an int, var or parentheses
-        if token.type == TokensEnum.INTEGER:
+        elif token.type == TokensEnum.INTEGER:
             self.checkAndAdvance(TokensEnum.INTEGER)
             return Num(token)
         elif token.type == TokensEnum.VARIABLE:
@@ -321,14 +333,12 @@ class Parser(object):
 
         return node
 
-    def parseLine(self):
-        return self.arithmeticExpr()
-
     def parseProgram(self):
         self.checkAndAdvance(TokensEnum.PROGRAM)
         program_name = self.current_token
         self.checkAndAdvance(TokensEnum.VARIABLE)
         self.checkAndAdvance(TokensEnum.SEMICOLON)
-        # Variable declaration
-        # BEGIN ... END.
-        
+        self.checkAndAdvance(TokensEnum.VAR)
+        var_decl = self.varDecl()
+        code_block = self.compoundStatement(endingToken = TokensEnum.DOT)
+        return Program(program_name, var_decl, code_block)
