@@ -1,6 +1,6 @@
 from lexer import *
 from parser import *
-import sys, os
+import sys
 import argparse
 
 def cleanLine(line: str):

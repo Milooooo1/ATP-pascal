@@ -1,6 +1,4 @@
-from typing import List, Type, Tuple
-from enum import Enum
-from collections.abc import Iterable
+from typing import List, Tuple
 from tokens import *
 import itertools
 import re
