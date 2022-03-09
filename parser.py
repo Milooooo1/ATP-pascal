@@ -70,7 +70,7 @@ class Conditional(AST):
         self.right = right
 
     def __str__(self) -> str:
-        return f"EVAL: LHS:({self.left}) COND: {self.conditional.value}, RHS:({self.right})"
+        return f"EVAL: LHS:({self.left}) {self.conditional.value}, RHS:({self.right})"
 
 class While(AST):
     '''A while loop has a condition and a codeblock to execute while the condition is true'''
