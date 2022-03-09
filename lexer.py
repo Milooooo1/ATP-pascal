@@ -39,6 +39,7 @@ class TokensEnum(Enum):
     BEGIN      = "BEGIN",
     END        = "END",
     VAR        = "VAR",
+    DO         = "DO",
     REPEAT     = "REPEAT",
     WHILE      = "WHILE",
     PROGRAM    = "PROGRAM",
@@ -117,6 +118,8 @@ def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
             return [Token(TokensEnum.END,        "END",      position)]
         case input if input.upper() == "VAR":
             return [Token(TokensEnum.VAR,        "VAR",      position)]
+        case input if input.upper() == "DO":
+            return [Token(TokensEnum.DO,        "DO",      position)]
         case input if input.upper() == "REPEAT":
             return [Token(TokensEnum.REPEAT,     "REPEAT",   position)]
         case input if input.upper() == "WHILE":

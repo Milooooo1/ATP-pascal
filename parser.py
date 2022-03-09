@@ -72,6 +72,15 @@ class Conditional(AST):
     def __str__(self) -> str:
         return f"EVAL: LHS:({self.left}) COND: {self.conditional.value}, RHS:({self.right})"
 
+class While(AST):
+    '''A while loop has a condition and a codeblock to execute while the condition is true'''
+    def __init__(self, condition: Conditional, block: List[AST]) -> None:
+        self.condition = condition
+        self.codeblock = block
+
+    def __str__(self) -> str:
+        return f"WHILE {self.condition} \n\tDO {[str(i) for i in self.codeblock]}"
+
 class IfElse(AST):
     '''If Else object, if has a conditional and a codeBlock, else just has an code block'''
     def __init__(self, condition: Conditional, block: List[AST], elseNode: Union[AST, None]) -> None:
@@ -156,7 +165,7 @@ class Parser(object):
         '''Check if the given token is actually the current token before advancing'''
         if self.current_token.type == token_type:
             self.current_token = self.getNextToken()
-            
+
             if self.current_token.type == TokensEnum.LCOMMENT:
                 self.comment([], self.current_token)
 
@@ -233,6 +242,19 @@ class Parser(object):
         blockLst.append(self.arithmeticExpr())
         return self.compoundStatement(blockLst, endingToken)
 
+    def constructWhileExpr(self) -> Optional[While]:
+        '''Construct a While expression'''
+        self.checkAndAdvance(TokensEnum.WHILE)
+        self.checkAndAdvance(TokensEnum.LPAREN)
+        conditional = self.conditionalExpr()
+        self.checkAndAdvance(TokensEnum.RPAREN)
+        self.checkAndAdvance(TokensEnum.DO)
+        self.removeTokenUntil(TokensEnum.WHITESPACE)
+        self.removeTokenUntil(TokensEnum.INDENT)
+        self.checkAndAdvance(TokensEnum.BEGIN)
+        codeBlock = self.compoundStatement([])
+        return While(conditional, codeBlock)
+
     def constructIfElseExpr(self) -> Optional[IfElse]:
         '''Construct an if else code block.'''
         self.checkAndAdvance(TokensEnum.IF)
@@ -299,7 +321,7 @@ class Parser(object):
         returnType = self.current_token
         self.current_token = self.getNextToken()
         self.checkAndAdvance(TokensEnum.SEMICOLON)
-        
+
         varDeclDict = {}
         if self.current_token.type == TokensEnum.VAR:
             self.checkAndAdvance(TokensEnum.VAR)
@@ -336,6 +358,10 @@ class Parser(object):
         # Check for any if else statements
         elif token.type == TokensEnum.IF:
             return self.constructIfElseExpr()
+
+        # Check for any while loops
+        elif token.type == TokensEnum.WHILE:
+            return self.constructWhileExpr()
 
         # Check for functions
         elif token.type == TokensEnum.FUNCTION:
