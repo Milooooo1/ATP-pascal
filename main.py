@@ -8,8 +8,7 @@ def cleanLine(line: str):
     line = line.replace("\n", "")
     leading_spaces = len(line) - len(line.lstrip())
     if leading_spaces > 0:
-        for x in range(0, leading_spaces, 4):
-            line = "INDENT " + line.lstrip()
+        line = (str("INDENT ") * int(leading_spaces / 4)) + line.lstrip()
     return line
 
 def main():
@@ -24,8 +23,8 @@ def main():
         lines = [(index+1, cleanLine(line)) for index, line in enumerate(file)]
 
     lexedLines = tokenize(lines)
-    # [print(line) for line in lexedLines]
-    # print()
+    [print(line) for line in lexedLines]
+    print()
 
     parser = Parser(lexedLines)
     PascalAST = parser.parseProgram()

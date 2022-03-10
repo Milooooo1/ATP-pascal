@@ -1,10 +1,16 @@
 from typing import List, Dict, Union
 from tokens import *
+from copy import deepcopy
 from os import linesep
 
 # ==========================================================================================================
 #                                               AST OBJECTS
 # ==========================================================================================================
+
+def dcDecorator(function):
+    def inside(*args):
+        return function(*list(map(lambda element: deepcopy(element), args)))
+    return inside
 
 class AST(object):
     pass
