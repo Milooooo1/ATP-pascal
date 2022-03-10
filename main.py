@@ -1,6 +1,6 @@
 from lexer import *
 from parser import *
-import sys, os
+import sys
 import argparse
 
 def cleanLine(line: str):
@@ -24,9 +24,8 @@ def main():
         lines = [(index+1, cleanLine(line)) for index, line in enumerate(file)]
 
     lexedLines = tokenize(lines)
-    [print(line) for line in lexedLines]
-    print()
-    # [[print(token) for token in tokens] and print() for tokens in lexedLines]
+    # [print(line) for line in lexedLines]
+    # print()
 
     parser = Parser(lexedLines)
     PascalAST = parser.parseProgram()

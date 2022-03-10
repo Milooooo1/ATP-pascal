@@ -1,146 +1,6 @@
-from token import DOT
-from typing import List, Dict, Type, Tuple, Union, Optional
-from lexer import *
-import os
-
-# ==========================================================================================================
-#                                               AST OBJECTS
-# ==========================================================================================================
-
-class AST(object):
-    pass
-
-class BinOp(AST):
-    '''
-    Binary operator
-
-    A binary operator needs two operands and an operator
-    Example 1 + 2 where 1 and 2 are the operands and + is the operator
-    '''
-    def __init__(self, left: Token, op: Token, right: Token) -> None:
-        self.left = left
-        self.token = self.op = op
-        self.right = right
-
-    def __str__(self) -> str:
-        return f"BinOp: LHS: ({self.left}), OP: {self.token.value}, RHS: ({self.right})"
-
-class Num(AST):
-    '''
-    The Num object takes any literal number
-    '''
-    def __init__(self, token: Token) -> None:
-        self.token = token
-        self.value = token.value
-
-    def __str__(self) -> str:
-        return f"{self.token.value}"
-
-class Var(AST):
-    '''
-    The Var object takes any variable
-    '''
-    def __init__(self, token: Token) -> None:
-        self.token = token
-        self.value = token.value
-
-    def __str__(self) -> str:
-        return f"VAR: {self.value}"
-
-class Assign(AST):
-    '''
-    The assignment operator takes any variable and assigns any num object to it
-    '''
-    def __init__(self, left: Var, op: Token, right: Union[Num, BinOp]) -> None:
-        self.left = left
-        self.token = self.op = op
-        self.right = right
-
-    def __str__(self) -> str:
-        return f"ASSIGN: {self.left} {self.op.value} {self.right}"
-
-class Conditional(AST):
-    '''
-    The conditional evaluates the lhs and rhs token with the confitional operator
-    this can be a <,<=,>= or >
-    '''
-    def __init__(self, left: Union[Var, Num, BinOp], conditional: Token, right: Union[Var, Num, BinOp]) -> None:
-        self.left = left
-        self.conditional = conditional
-        self.right = right
-
-    def __str__(self) -> str:
-        return f"EVAL: LHS:({self.left}) COND: {self.conditional.value}, RHS:({self.right})"
-
-class IfElse(AST):
-    '''If Else object, if has a conditional and a codeBlock, else just has an code block'''
-    def __init__(self, condition: Conditional, block: List[AST], elseNode: Union[AST, None]) -> None:
-        self.condition = condition
-        self.ifBlock = block
-        self.elseNode = elseNode
-
-    def __str__(self) -> str:
-        n = "\n\t"
-        return f"\nIF ({self.condition}):\n\t{[str(i) for i in self.ifBlock]}\
-                 \nELSE: \n\t{[str(i) for i in self.elseNode]}\n"
-
-class FuncCall(AST):
-    '''Function call object'''
-    def __init__(self, funcName: str, argList: List[Token]) -> None:
-        self.funcName = funcName
-        self.argList = argList
-
-    def __str__(self):
-        return f"funcCall: {self.funcName} with vars: {[str(i.value) for i in self.argList]}"
-
-class Func(AST):
-    '''Function object'''
-    def __init__(self, funcName: str, argList: List[Token], varDeclDict: Dict[Var, Token], funcCodeBlock: List[AST], returnType: Token) -> None:
-        self.funcName = funcName.value
-        self.argList = argList
-        self.varDeclDict = varDeclDict
-        self.funcCodeBlock = funcCodeBlock
-        self.returnType = returnType
-
-    def __str__(self) -> str:
-        return f"FUNCTION \"{self.funcName}\" \
-            \n\tDECLARED VARS {[str(str(i.value) + str(' = ') + str(self.varDeclDict[i].value)) for i in self.varDeclDict.keys()]}\
-            \n\tRETURN TYPE: ({self.returnType.value}) \
-            \n\tAND FUNCTION BLOCK: {[str(entry) for entry in self.funcCodeBlock]}"
-
-class Program(AST):
-    '''
-    The Var object takes any variable
-    '''
-    def __init__(self, programName: str, varDecl: AST, functionsList: List[Func], compoundStatement: List[AST]) -> None:
-        self.program_name = programName.value
-        self.varDeclDict = varDecl
-        self.funcList = functionsList
-        self.compoundStatement = compoundStatement
-
-    def __str__(self) -> str:
-        return f"\nPROGRAM: \"{self.program_name}\" \
-            \nDECLARED VARS {[str(str(i.value) + str(' = ') + str(self.varDeclDict[i].value)) for i in self.varDeclDict.keys()]} \
-            \nDECLARED FUNCTIONS: {[str(i.funcName) for i in self.funcList]}\
-            \nMAIN BODY:\n{os.linesep.join(str(i) for i in self.compoundStatement)}"
-
-class NoOp(AST):
-    '''No operation'''
-    def __init__(self, token: Token) -> None:
-        self.token = token
-
-    def __str__(self) -> str:
-        return f"Couldn't create an AST with token: {self.token.value}"
-
-class Comment(AST):
-    '''Comment object'''
-    def __init__(self, comment: List[str]) -> None:
-        self.commentLst = comment
-
-    def __str__(self) -> str:
-        return ""
-        # comments = " ".join([str(item) for item in self.commentLst[1:-1]])
-        # return f"COMMENT: {comments}"
+from typing import List, Dict, Optional
+from tokens import *
+from ast_classes import *
 
 # ==========================================================================================================
 #                                            PARSER OBJECT
@@ -165,7 +25,7 @@ class Parser(object):
         '''Check if the given token is actually the current token before advancing'''
         if self.current_token.type == token_type:
             self.current_token = self.getNextToken()
-            
+
             if self.current_token.type == TokensEnum.LCOMMENT:
                 self.comment([], self.current_token)
 
@@ -242,6 +102,19 @@ class Parser(object):
         blockLst.append(self.arithmeticExpr())
         return self.compoundStatement(blockLst, endingToken)
 
+    def constructWhileExpr(self) -> Optional[While]:
+        '''Construct a While expression'''
+        self.checkAndAdvance(TokensEnum.WHILE)
+        self.checkAndAdvance(TokensEnum.LPAREN)
+        conditional = self.conditionalExpr()
+        self.checkAndAdvance(TokensEnum.RPAREN)
+        self.checkAndAdvance(TokensEnum.DO)
+        self.removeTokenUntil(TokensEnum.WHITESPACE)
+        self.removeTokenUntil(TokensEnum.INDENT)
+        self.checkAndAdvance(TokensEnum.BEGIN)
+        codeBlock = self.compoundStatement([])
+        return While(conditional, codeBlock)
+
     def constructIfElseExpr(self) -> Optional[IfElse]:
         '''Construct an if else code block.'''
         self.checkAndAdvance(TokensEnum.IF)
@@ -315,7 +188,7 @@ class Parser(object):
         returnType = self.current_token
         self.current_token = self.getNextToken()
         self.checkAndAdvance(TokensEnum.SEMICOLON)
-        
+
         varDeclDict = {}
         if self.current_token.type == TokensEnum.VAR:
             self.checkAndAdvance(TokensEnum.VAR)
@@ -352,6 +225,10 @@ class Parser(object):
         # Check for any if else statements
         elif token.type == TokensEnum.IF:
             return self.constructIfElseExpr()
+
+        # Check for any while loops
+        elif token.type == TokensEnum.WHILE:
+            return self.constructWhileExpr()
 
         # Check for functions
         elif token.type == TokensEnum.FUNCTION:

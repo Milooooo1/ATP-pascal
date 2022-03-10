@@ -5,7 +5,7 @@ var
     c : integer;
 begin
     c = b + a
-end; 
+end;
 
 
 function aPlusB(a, b): integer;
@@ -20,6 +20,11 @@ VAR
 BEGIN
     aPlusB(6, 5)
     bool = (a < b)
+    WHILE (a < b) DO
+    BEGIN
+        a = a + 1
+    END;
+
     IF (a < 0) THEN
         a = (10 + a) / 2
         a + 2
@@ -32,4 +37,5 @@ BEGIN
         END;
         a = 100
     END;
+
 END.
