@@ -18,8 +18,11 @@ VAR
     b : integer;
     c : integer;
 BEGIN
+    a = 1
+    b = 2
+    c = (2 + 2)
+    c = ((a + b) * (60 / (2 + 8)))
     aPlusB(6, 5)
-    bool = (a < b)
     WHILE (a < b) DO
     BEGIN
         a = a + 1

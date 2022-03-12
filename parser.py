@@ -142,7 +142,7 @@ class Parser(object):
             self.checkAndAdvance(TokensEnum.WHITESPACE)
 
         if self.current_token.type == TokensEnum.VARIABLE:
-            var = Var(self.current_token)
+            var = self.current_token.value
             self.checkAndAdvance(TokensEnum.VARIABLE)
             self.checkAndAdvance(TokensEnum.DOUBLEDOT)
             varDict[var] = self.current_token
