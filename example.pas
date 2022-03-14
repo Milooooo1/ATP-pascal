@@ -4,13 +4,14 @@ function aMinB(a, b): integer;
 var
     c : integer;
 begin
-    c = b + a
+    c = a - b
+    result = c
 end;
 
 
 function aPlusB(a, b): integer;
 begin
-    result = b + a
+    result = a + b
 end; {end of myfunction}
 
 VAR
@@ -22,7 +23,7 @@ BEGIN
     b = 2
     c = (2 + 2)
     c = ((a + b) * (60 / (2 + 8)))
-    aPlusB(6, 5)
+    c = aMinB(6, 5)
     WHILE (a < b) DO
     BEGIN
         a = a + 1

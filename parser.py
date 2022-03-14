@@ -210,7 +210,7 @@ class Parser(object):
             self.checkAndAdvance(TokensEnum.INDENT)
             token = self.current_token
             if token.type == TokensEnum.END:
-                return None
+                return NoOp(token)
             return self.arithmeticExpr()
 
         if token.type == TokensEnum.WHITESPACE:

@@ -118,7 +118,7 @@ class Func(AST):
 
     def __str__(self) -> str:
         return f"FUNCTION \"{self.funcName}\" \
-            \n\tDECLARED VARS {[str(str(i.value) + str(' = ') + str(self.varDeclDict[i].value)) for i in self.varDeclDict.keys()]}\
+            \n\tDECLARED VARS {[str(str(i) + str(' = ') + str(self.varDeclDict[i].value)) for i in self.varDeclDict.keys()]}\
             \n\tRETURN TYPE: ({self.returnType.value}) \
             \n\tAND FUNCTION BLOCK: {[str(entry) for entry in self.funcCodeBlock]}"
 

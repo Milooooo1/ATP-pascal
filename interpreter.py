@@ -44,8 +44,27 @@ class Interpreter(object):
         '''visit_Var gets the value of a variable'''
         return self.global_scope[node.value]
 
+    def visit_NoOp(self, node: AST) -> None:
+        '''visit_NoOp skips NoOp ast nodes'''
+        pass
+
+    def visit_FuncCall(self, node: FuncCall) -> None:
+        '''visit_FuncCall will handle any function calls and prosecutes the function'''
+        tmp = self.global_scope 
+        func = [i for i in self.tree.funcList if i.funcName == node.funcName][0]
+        # Init local scope
+        self.global_scope = func.varDeclDict 
+        self.global_scope['result'] = func.returnType 
+        self.global_scope.update([(func.argList[i].value, node.argList[i].value) for i in range(0, len(node.argList))])
+
+        [self.visit(i) for i in func.funcCodeBlock]
+
+        # Return result value of function
+        res = self.global_scope['result']
+        self.global_scope = tmp
+        return res
+
     def visit_BinOp(self, node: BinOp) -> Union[int, float]:
-        print(node)
         '''visit_BinOp'''
         if node.op.type == TokensEnum.ADD:
             return int(self.visit(node.left)) + int(self.visit(node.right))
@@ -57,5 +76,6 @@ class Interpreter(object):
             return float(self.visit(node.left)) / float(self.visit(node.right))
         else:
             raise Exception(f"Unknown operator found: {node.op}")
+
     def interpret(self):
         print(self.visit(self.tree))
