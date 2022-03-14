@@ -48,10 +48,11 @@ class Interpreter(object):
         '''visit_NoOp skips NoOp ast nodes'''
         pass
 
-    def visit_FuncCall(self, node: FuncCall) -> None:
+    def visit_FuncCall(self, node: FuncCall) -> Union[int, float]:
         '''visit_FuncCall will handle any function calls and prosecutes the function'''
         tmp = self.global_scope 
         func = [i for i in self.tree.funcList if i.funcName == node.funcName][0]
+        
         # Init local scope
         self.global_scope = func.varDeclDict 
         self.global_scope['result'] = func.returnType 
@@ -64,18 +65,41 @@ class Interpreter(object):
         self.global_scope = tmp
         return res
 
+    def visit_While(self, node: While) -> None:
+        if self.visit(node.condition):
+            [self.visit(i) for i in node.codeblock]
+            self.visit_While(node)    
+
+    def visit_IfElse(self, node: IfElse) -> None:
+        pass
+
+    def visit_Conditional(self, node: Conditional) -> bool:
+        '''visit_Conditional'''
+        match node.conditional.type:
+            case TokensEnum.LESS_THAN:
+                return int(self.visit(node.left)) < int(self.visit(node.right))
+            case TokensEnum.MORE_THAN:
+                return int(self.visit(node.left)) > int(self.visit(node.right))
+            case TokensEnum.LESS_THAN_OR_EQUAL:
+                return int(self.visit(node.left)) <= int(self.visit(node.right))
+            case TokensEnum.MORE_THAN_OR_EQUAL:
+                return int(self.visit(node.left)) >= int(self.visit(node.right))
+            case _:
+                raise SyntaxError(f"Unknown operator found: {node.op}")
+
     def visit_BinOp(self, node: BinOp) -> Union[int, float]:
         '''visit_BinOp'''
-        if node.op.type == TokensEnum.ADD:
-            return int(self.visit(node.left)) + int(self.visit(node.right))
-        elif node.op.type == TokensEnum.SUBS:
-            return int(self.visit(node.left)) - int(self.visit(node.right))
-        elif node.op.type == TokensEnum.MULTP:
-            return int(self.visit(node.left)) * int(self.visit(node.right))
-        elif node.op.type == TokensEnum.DIVIDE:
-            return float(self.visit(node.left)) / float(self.visit(node.right))
-        else:
-            raise Exception(f"Unknown operator found: {node.op}")
+        match node.op.type:
+            case TokensEnum.ADD:
+                return int(self.visit(node.left)) + int(self.visit(node.right))
+            case TokensEnum.SUBS:
+                return int(self.visit(node.left)) - int(self.visit(node.right))
+            case TokensEnum.MULTP:
+                return int(self.visit(node.left)) * int(self.visit(node.right))
+            case TokensEnum.DIVIDE:
+                return float(self.visit(node.left)) / float(self.visit(node.right))
+            case _:
+                raise SyntaxError(f"Unknown operator found: {node.op}")
 
     def interpret(self):
         print(self.visit(self.tree))

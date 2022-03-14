@@ -20,7 +20,7 @@ VAR
     c : integer;
 BEGIN
     a = 1
-    b = 2
+    b = 10
     c = (2 + 2)
     c = ((a + b) * (60 / (2 + 8)))
     c = aMinB(6, 5)
