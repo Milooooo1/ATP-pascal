@@ -71,19 +71,22 @@ class Interpreter(object):
             self.visit_While(node)    
 
     def visit_IfElse(self, node: IfElse) -> None:
-        pass
+        if self.visit(node.condition):
+            [self.visit(i) for i in node.ifBlock]
+        else:
+            [self.visit(i) for i in node.elseNode]
 
     def visit_Conditional(self, node: Conditional) -> bool:
         '''visit_Conditional'''
         match node.conditional.type:
             case TokensEnum.LESS_THAN:
-                return int(self.visit(node.left)) < int(self.visit(node.right))
+                return int(int(self.visit(node.left)) < int(self.visit(node.right)))
             case TokensEnum.MORE_THAN:
-                return int(self.visit(node.left)) > int(self.visit(node.right))
+                return int(int(self.visit(node.left)) > int(self.visit(node.right)))
             case TokensEnum.LESS_THAN_OR_EQUAL:
-                return int(self.visit(node.left)) <= int(self.visit(node.right))
+                return int(int(self.visit(node.left)) <= int(self.visit(node.right)))
             case TokensEnum.MORE_THAN_OR_EQUAL:
-                return int(self.visit(node.left)) >= int(self.visit(node.right))
+                return int(int(self.visit(node.left)) >= int(self.visit(node.right)))
             case _:
                 raise SyntaxError(f"Unknown operator found: {node.op}")
 

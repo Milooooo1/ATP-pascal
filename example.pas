@@ -33,9 +33,8 @@ BEGIN
         a = (10 + a) / 2
         a + 2
     ELSE
-        (10 + 20) / 2
         IF (b > 2) THEN
-            (2 / 2) < 6
+            c = (2 / 2) > 6
         ELSE
             c = 2
         END;
