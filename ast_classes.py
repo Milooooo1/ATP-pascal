@@ -134,7 +134,7 @@ class Program(AST):
 
     def __str__(self) -> str:
         return f"\nPROGRAM: \"{self.program_name}\" \
-            \nDECLARED VARS {[str(str(i.value) + str(' = ') + str(self.varDeclDict[i].value)) for i in self.varDeclDict.keys()]} \
+            \nDECLARED VARS {[str(str(i) + str(' = ') + str(self.varDeclDict[i].value)) for i in self.varDeclDict.keys()]} \
             \nDECLARED FUNCTIONS: {[str(i.funcName) for i in self.funcList]}\
             \nMAIN BODY:\n{linesep.join(str(i) for i in self.compoundStatement)}"
 

@@ -1,5 +1,6 @@
 from lexer import *
 from parser import *
+from interpreter import *
 import sys
 import argparse
 
@@ -29,6 +30,11 @@ def main():
     parser = Parser(lexedLines)
     PascalAST = parser.parseProgram()
     print(PascalAST)
+
+    print("\n\n\n") # New lines for readability in terminal
+    interpreter = Interpreter(PascalAST)
+    interpreter.interpret()
+
 
 
 if __name__ == "__main__":
