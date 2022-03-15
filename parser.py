@@ -7,11 +7,13 @@ from ast_classes import *
 # ==========================================================================================================
 
 class Parser(object):
+    # __init__ :: List[Token] -> None
     def __init__(self, lexed_tokens: List[Token]) -> None:
         self.lexed_tokens = lexed_tokens[1:]
         self.current_token = lexed_tokens[0]
         self.current_indentation = 0
 
+    # getNextToken :: -> Token
     def getNextToken(self) -> Token:
         '''Pop the next token from the fron of the lexed_tokens list'''
         if len(self.lexed_tokens) == 1:
@@ -21,6 +23,7 @@ class Parser(object):
             self.lexed_tokens = tail
             return head
 
+    # checkAndAdvance :: TokensEnum -> None
     def checkAndAdvance(self, token_type: TokensEnum) -> None:
         '''Check if the given token is actually the current token before advancing'''
         if self.current_token.type == token_type:
@@ -35,10 +38,12 @@ class Parser(object):
         else:
             print(f"ERROR: {self.current_token.type} != {token_type} ON: {self.current_token.position}")
 
-    def peek(self, index = 0) -> Token:
+    # peek :: int -> Token
+    def peek(self, index: int = 0) -> Token:
         '''Take a lok at the next element'''
         return self.lexed_tokens[index]
 
+    # comment :: List[str] -> Token
     def comment(self, commentList: List[str], token: Token):
         '''Extract comments'''
         if token.type == TokensEnum.RCOMMENT:
@@ -49,6 +54,7 @@ class Parser(object):
         self.current_token = self.getNextToken()
         return self.comment(commentList, self.current_token)
 
+    # conditionalExpr :: Optional[Conditional] 
     def conditionalExpr(self) -> Optional[Conditional]:
         '''Construct a conditional expression'''
         match self.current_token.type:
@@ -64,6 +70,7 @@ class Parser(object):
 
         return Conditional(lhs, token, self.arithmeticExpr())
 
+    # assignmentExpr :: Optional[Assign]
     def assignmentExpr(self) -> Optional[Assign]:
         '''Constuct an assignment expression.'''
         lhs = Var(self.current_token)
@@ -72,7 +79,8 @@ class Parser(object):
         self.checkAndAdvance(TokensEnum.EQUALS)
         return Assign(lhs, token, self.arithmeticExpr())
 
-    def removeTokenUntil(self, token_type: TokensEnum, ctr = 0) -> Token:
+    # removeTokenUntil :: TokensEnum -> int -> Token
+    def removeTokenUntil(self, token_type: TokensEnum, ctr: int = 0) -> Token:
         if self.current_token.type == token_type:
             self.checkAndAdvance(token_type)
             ctr += 1
@@ -80,6 +88,7 @@ class Parser(object):
         else:
             return ctr
 
+    # codeBlock :: List[AST] -> List[AST]
     def codeBlock(self, blockLst: List[AST]) -> List[AST]:
         '''Create a block based on indentations'''
         if self.current_token.type != TokensEnum.INDENT or self.current_token == TokensEnum.ELSE:
@@ -90,6 +99,7 @@ class Parser(object):
             blockLst.append(self.arithmeticExpr())
         return self.codeBlock(blockLst)
 
+    # compoundStatement :: List[AST] -> TokensEnum -> List[AST]
     def compoundStatement(self, blockLst: List[AST] = [], endingToken: TokensEnum = TokensEnum.SEMICOLON) -> List[AST]:
         '''This function constructs a code block or compount statement it assumes a BEGIN
         token has been encountered and constructs a code block until an ending token is encountered'''
@@ -102,7 +112,8 @@ class Parser(object):
         blockLst.append(self.arithmeticExpr())
         return self.compoundStatement(blockLst, endingToken)
 
-    def constructWhileExpr(self) -> Optional[While]:
+    # constructWhileExpr :: While
+    def constructWhileExpr(self) -> While:
         '''Construct a While expression'''
         self.checkAndAdvance(TokensEnum.WHILE)
         self.checkAndAdvance(TokensEnum.LPAREN)
@@ -115,7 +126,8 @@ class Parser(object):
         codeBlock = self.compoundStatement([])
         return While(conditional, codeBlock)
 
-    def constructIfElseExpr(self) -> Optional[IfElse]:
+    # constructIfElseExpr :: ifElse
+    def constructIfElseExpr(self) -> IfElse:
         '''Construct an if else code block.'''
         self.checkAndAdvance(TokensEnum.IF)
         self.checkAndAdvance(TokensEnum.LPAREN)
@@ -129,7 +141,8 @@ class Parser(object):
             elseBlock = self.compoundStatement([])
         return IfElse(conditional, ifBlock, elseBlock)
 
-    def varDecl(self, varDict: Dict[Var, TokensEnum] = {}):
+    # varDecl :: Dict[Var, TokensEnum] -> Dict[Var, TokensEnum]
+    def varDecl(self, varDict: Dict[Var, TokensEnum] = {}) -> Dict[Var, TokensEnum]:
         '''This function creates a variable declaration block'''
         if self.current_token.type == TokensEnum.BEGIN:
             self.checkAndAdvance(TokensEnum.BEGIN)
@@ -151,6 +164,7 @@ class Parser(object):
 
         return self.varDecl(varDict)
 
+    # constructArgList :: List[Token] -> List[Token] 
     def constructArgList(self, argList: List[Token] = []) -> List[Token]:
         '''This function constructs an argument list which is part of constructing a function'''
         if self.current_token.type == TokensEnum.RPAREN:
@@ -163,13 +177,15 @@ class Parser(object):
             self.checkAndAdvance(TokensEnum.COMMA)
         return self.constructArgList(argList)
 
-    def functionCall(self):
+    # functionCall :: FuncCall
+    def functionCall(self) -> FuncCall:
         funcName = self.current_token
         self.checkAndAdvance(TokensEnum.VARIABLE)
         self.checkAndAdvance(TokensEnum.LPAREN)
         argList = self.constructArgList([])
         return FuncCall(funcName.value, argList)
 
+    # constructFuncList :: List[Func] -> List[Func]
     def constructFuncList(self, funcList: List[Func] = []) -> List[Func]:
         '''Create a list of all functions'''
         if self.current_token.type != TokensEnum.FUNCTION:
@@ -177,7 +193,8 @@ class Parser(object):
         funcList.append(self.constructFunction())
         return self.constructFuncList(funcList)
 
-    def constructFunction(self) -> Optional[Func]:
+    # constructFunction :: Func
+    def constructFunction(self) -> Func:
         '''Construct a function AST class'''
         self.checkAndAdvance(TokensEnum.FUNCTION)
         funcName = self.current_token
@@ -203,7 +220,8 @@ class Parser(object):
 
     # END OF HELPER FUNCTIONS
 
-    def arithmeticExprStart(self) -> Optional[AST]:
+    # arithmeticExprStart :: AST
+    def arithmeticExprStart(self) -> AST:
         '''Construct arithmetic expression starting with integrals or parentheses.'''
         token = self.current_token
 
@@ -261,6 +279,7 @@ class Parser(object):
 
         return NoOp(token)
 
+    # arithmeticExprHighPrecedence :: AST
     def arithmeticExprHighPrecedence(self) -> AST:
         '''Construct arithmetic expression with high precedence.'''
 
@@ -275,6 +294,7 @@ class Parser(object):
 
         return node
 
+    # arithmeticExpr :: AST
     def arithmeticExpr(self) -> AST:
         '''Constuct arithmetic expression'''
 
@@ -297,7 +317,8 @@ class Parser(object):
 
         return node
 
-    def parseProgram(self):
+    # parseProgram :: Program
+    def parseProgram(self) -> Program:
         self.checkAndAdvance(TokensEnum.PROGRAM)
         program_name = self.current_token
         self.checkAndAdvance(TokensEnum.VARIABLE)

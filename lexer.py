@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union, Iterable
 from tokens import *
 from copy import deepcopy
 import itertools
@@ -13,6 +13,7 @@ def dcDecorator(function):
         return function(*list(map(lambda element: deepcopy(element), args)))
     return inside
 
+# toToken :: str -> Tuple[int, int] -> List[Token]
 def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
     '''This function takes a single word as input and turns it into a token.'''
     # TODO: add support for parentheses next to variables or integrals
@@ -139,6 +140,7 @@ def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
         case _:
             raise TypeError(f'Illegal token: {repr(input)} on line: {position[0]} token number: {position[1]}')
 
+# flatten :: List -> Token
 def flatten(lst: List) -> Token:
     if isinstance(lst, Token):
         return lst
@@ -149,7 +151,8 @@ def flatten(lst: List) -> Token:
     head, *tail = lst
     return head + flatten(tail)
 
-def recFlatten(x):
+# flatten :: Union[Iterable, object] -> Object
+def recFlatten(x: Union[Iterable, object]) -> object:
     res = []
     def loop(y):
         for i in y:
@@ -160,6 +163,7 @@ def recFlatten(x):
     loop(x)
     return res
 
+# tokenize :: List[str] -> List[Token]
 @dcDecorator
 def tokenize(input: List[str]) -> List[Token]:
     '''This function extracts all the words from a list of lines and it turns them into a list of tokens per line'''
