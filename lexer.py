@@ -1,11 +1,17 @@
 from typing import List, Tuple
 from tokens import *
+from copy import deepcopy
 import itertools
 import re
 
 # ==========================================================================================================
 #                                             Lexer functions
 # ==========================================================================================================
+
+def dcDecorator(function):
+    def inside(*args):
+        return function(*list(map(lambda element: deepcopy(element), args)))
+    return inside
 
 def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
     '''This function takes a single word as input and turns it into a token.'''
@@ -64,7 +70,7 @@ def toToken(input: str, position: Tuple[int, int]) -> List[Token]:
         case input if input.upper() == "VAR":
             return [Token(TokensEnum.VAR,        "VAR",      position)]
         case input if input.upper() == "DO":
-            return [Token(TokensEnum.DO,        "DO",      position)]
+            return [Token(TokensEnum.DO,         "DO",       position)]
         case input if input.upper() == "REPEAT":
             return [Token(TokensEnum.REPEAT,     "REPEAT",   position)]
         case input if input.upper() == "WHILE":
@@ -154,6 +160,7 @@ def recFlatten(x):
     loop(x)
     return res
 
+@dcDecorator
 def tokenize(input: List[str]) -> List[Token]:
     '''This function extracts all the words from a list of lines and it turns them into a list of tokens per line'''
     tokens = [[[entry for entry in recFlatten(toToken(key, (line[0], index)))] for index, key in enumerate(line[1].split(" "))] for line in input]
