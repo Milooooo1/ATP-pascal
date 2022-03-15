@@ -1,6 +1,6 @@
 PROGRAM example;
 
-function aMinB(a, b): integer;
+{function aMinB(a, b): integer;
 var
     c : integer;
 begin
@@ -12,14 +12,40 @@ end;
 function aPlusB(a, b): integer;
 begin
     result = a + b
-end; {end of myfunction}
+end;}
+
+
+function odd(n): integer;
+var
+    nMinEen : integer;
+begin
+    if (n <= 0) then
+        result = 0
+    else 
+        nMinEen = n - 1
+        result = even(nMinEen)
+    end;
+end;
+
+function even(n): integer;
+var
+    nMinEen : integer;
+begin
+    if(n <= 0) then
+        result = 1
+    else
+        nMinEen = n - 1
+        result = odd(nMinEen)
+    end;
+end;
+
 
 VAR
     a : integer;
     b : integer;
     c : integer;
 BEGIN
-    a = 1
+    {a = 1
     b = 10
     c = (2 + 2)
     c = ((a + b) * (60 / (2 + 8)))
@@ -39,6 +65,8 @@ BEGIN
             c = 2
         END;
         a = 100
-    END;
+    END;}
+    a = 9
+    b = odd(a)
 
 END.
