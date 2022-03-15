@@ -183,7 +183,7 @@ class Parser(object):
         funcName = self.current_token
         self.checkAndAdvance(TokensEnum.VARIABLE)
         self.checkAndAdvance(TokensEnum.LPAREN)
-        argList = self.constructArgList()
+        argList = self.constructArgList([])
         self.checkAndAdvance(TokensEnum.DOUBLEDOT)
         returnType = self.current_token
         self.current_token = self.getNextToken()
@@ -196,6 +196,7 @@ class Parser(object):
 
         if self.current_token.type == TokensEnum.BEGIN:
             self.checkAndAdvance(TokensEnum.BEGIN)
+
         codeBlock = self.compoundStatement([], TokensEnum.SEMICOLON)
 
         return Func(funcName, argList, varDeclDict, codeBlock, returnType)
@@ -306,6 +307,6 @@ class Parser(object):
         if self.current_token.type == TokensEnum.FUNCTION:
             functionsList = self.constructFuncList()
         self.checkAndAdvance(TokensEnum.VAR)
-        var_decl = self.varDecl()
+        var_decl = self.varDecl({})
         code_block = self.compoundStatement(endingToken = TokensEnum.DOT)
         return Program(program_name, var_decl, functionsList, code_block)

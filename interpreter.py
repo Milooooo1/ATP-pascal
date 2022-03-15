@@ -56,7 +56,10 @@ class Interpreter(object):
         # Init local scope
         self.global_scope = func.varDeclDict 
         self.global_scope['result'] = func.returnType 
-        self.global_scope.update([(funcVar.value, tmp[nodeVar.value]) if nodeVar.type == TokensEnum.VARIABLE else (funcVar.value, nodeVar.value) for nodeVar, funcVar in zip(node.argList, func.argList)])
+        self.global_scope.update([(funcVar.value, tmp[nodeVar.value]) if nodeVar.type == TokensEnum.VARIABLE\
+                                   else (funcVar.value, nodeVar.value) 
+                                   for nodeVar, funcVar in zip(node.argList, func.argList)])
+
 
         [self.visit(i) for i in func.funcCodeBlock]
 
