@@ -20,6 +20,7 @@ def main():
     parser.add_argument("-f", "--file", required=True, type=str, help="Filepath to a Pascal file")
     parser.add_argument("-c", "--compile", required=False, action='store_true', help="Flag to specify if the file needs to be compiled or not")
     parser.add_argument("-i", "--interpret", required=False, action='store_true', help="Flag to specify if the file needs to be interpreted or not")
+    parser.add_argument("-o", "--out", required=False, type=str, help="File to store the compiled code in", default="out.pas")
 
     args = parser.parse_args()
 
@@ -42,13 +43,16 @@ def main():
     if args.compile:
         print("\n\n\nCompiling program:") # New lines for readability in terminal
         compiler = Compiler(PascalAST)
-        compiler.compile()
+        outFileName = args.out
+        if "." not in outFileName:
+            outFileName += ".pas"
+
+        compiler.compile(outFileName)
 
     if not args.compile and not args.interpret:
         print("Please specify if the program needs to be compiled or interpreted by passing one of the following flags:")
         print("\t-i or --interpret for interpretation")
         print("\t-c or --compile   for compilation")
-
 
 if __name__ == "__main__":
     main()
