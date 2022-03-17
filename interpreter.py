@@ -21,7 +21,7 @@ class Interpreter(object):
     # generic_visit :: AST) -> Exception 
     def generic_visit(self, node: AST) -> Exception:
         '''When a node was found without a visit function the generic_visit() function is called'''
-        raise Exception('No visit_{} method'.format(type(node).__name__))
+        raise Exception(f"No visit_{type(node).__name__} method")
 
     # visit_Program :: Program) -> None 
     def visit_Program(self, node: Program) -> None:
