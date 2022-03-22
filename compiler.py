@@ -50,10 +50,10 @@ class Compiler(object):
 
         if isinstance(node.left, BinOp) and not isinstance(node.right, BinOp):
             self.compile_BinOp(node.left, file)
-            file.write(f"\t{opToAsm[node.op.value]} R0 R0 {self.visit(node.right, file)}\n")
+            file.write(f"\t{opToAsm[node.op.value]} {destRegister} R0 {self.visit(node.right, file)}\n")
         elif not isinstance(node.left, BinOp) and isinstance(node.right, BinOp):
             self.compile_BinOp(node.right, file)
-            file.write(f"\t{opToAsm[node.op.value]} R0 R0 {self.visit(node.left, file)}\n")
+            file.write(f"\t{opToAsm[node.op.value]} {destRegister} R0 {self.visit(node.left, file)}\n")
         elif isinstance(node.left, BinOp) and isinstance(node.right, BinOp):
             self.compile_BinOp(node.left, file, "R3")
             self.compile_BinOp(node.right, file, "R4")

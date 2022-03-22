@@ -39,11 +39,15 @@ example:
 	SUB SP SP #12
 	MOV R0 #2
 	STR R0 [SP, #4]		# b stored
+	MOV R1 #4
+	LDR R0 [SP, #4]		# b loaded
+	MOV R2 R0
+	SUB R3 R1 R2
 	LDR R0 [SP, #4]		# b loaded
 	MOV R1 R0
 	MOV R2 #1
-	SUB R0 R1 R2
-	ADD R0 R0 #2
+	SUB R4 R1 R2
+	ADD R3 R3 R4
 	MOV R4 16
 	ADD R0 R3 R4
 	STR R0 [SP, #0]		# a stored
