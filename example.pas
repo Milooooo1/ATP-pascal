@@ -8,12 +8,10 @@ begin
     result = c
 end;
 
-
 function aPlusB(a, b): integer;
 begin
     result = a + b
 end;
-
 
 function odd(n): integer;
 var
@@ -45,8 +43,12 @@ VAR
     b : integer;
     c : integer;
 BEGIN
-    a = 1
-    b = 10
+    b = 2
+    a = (2 + (b - 1)) + (4 * 4)
+    {a = (4 + (2 + 2)) * (3 - 1)
+    b = 6
+    c = 2 + b}
+    {b = 10
     c = (2 + 2)
     c = ((a + b) * (60 / (2 + 8)))
     c = aMinB(6, 5)
@@ -67,6 +69,6 @@ BEGIN
         a = 100
     END;
     a = 9
-    b = odd(a)
+    b = odd(a)}
 
 END.

@@ -20,7 +20,7 @@ def main():
     parser.add_argument("-f", "--file", required=True, type=str, help="Filepath to a Pascal file")
     parser.add_argument("-c", "--compile", required=False, action='store_true', help="Flag to specify if the file needs to be compiled or not")
     parser.add_argument("-i", "--interpret", required=False, action='store_true', help="Flag to specify if the file needs to be interpreted or not")
-    parser.add_argument("-o", "--out", required=False, type=str, help="File to store the compiled code in", default="out.pas")
+    parser.add_argument("-o", "--out", required=False, type=str, help="File to store the compiled code in", default="out.asm")
 
     args = parser.parse_args()
 

@@ -9,7 +9,7 @@ class Interpreter(object):
     # __init__ :: Program -> None
     def __init__(self, programAST: Program) -> None:
         self.tree = programAST
-        # self.global_scope = programAST.varDeclDict
+        self.global_scope = programAST.varDeclDict
 
     # visit :: AST -> Union[int, float, str, bool]
     def visit(self, node: AST) -> Union[int, float, str, bool]:
