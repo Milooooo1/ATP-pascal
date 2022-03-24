@@ -36,12 +36,12 @@ def main():
     print(PascalAST)
 
     if args.interpret:
-        print("\n\n\nInterpreting program:") # New lines for readability in terminal
+        print("\n\n\nInterpreting program...") # New lines for readability in terminal
         interpreter = Interpreter(PascalAST)
         interpreter.interpret()
 
     if args.compile:
-        print("\n\n\nCompiling program:") # New lines for readability in terminal
+        print("\n\n\nCompiling program...") # New lines for readability in terminal
         compiler = Compiler(PascalAST)
         outFileName = args.out
         if "." not in outFileName:
@@ -53,15 +53,10 @@ def main():
         data = []
         with open (outFileName, "r") as myfile:
             data = myfile.readlines()
-
-        # remove all initialization
+            
         newFile = ''
-        for line in data:
-            if  ".global" in line or ".text" in line or ".text" in line or ".align" in line or ".cpu" in line:
-                pass
-            else:
-                newFile += line
-                   
+        [newFile := newFile + line if (not ".global" in line or not ".text" in line or not ".text" in line or not ".align" in line or not ".cpu" in line) else '' for line in data]
+
         # program name must be _start
         newFile = newFile.replace(PascalAST.program_name, "_start", -1)
         file = open("ASM-Interpreter/toRun.asm", 'w')
@@ -69,6 +64,7 @@ def main():
         file.close()
         print("Running interpreter...")
         os.system(f"python3.6 ASM-Interpreter/main.py")
+        print("Done.")
 
     if not args.compile and not args.interpret:
         print("Please specify if the program needs to be compiled or interpreted by passing one of the following flags:")

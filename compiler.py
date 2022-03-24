@@ -188,5 +188,5 @@ class Compiler(object):
         file = open(outFile, 'w')
         self.visit(self.tree, file)
         file.close()
-        os.system(f"cat {outFile}")
+        # os.system(f"cat {outFile}")
         print("Compiling done.")

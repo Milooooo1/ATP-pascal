@@ -1,3 +1,10 @@
+	.cpu cortex-m0
+	.text
+	.align 4
+	.global aMinB
+	.global aPlusB
+	.global odd
+	.global even
 
 aMinB:
 	PUSH {r4, r5, r6, r7, lr}
