@@ -47,9 +47,13 @@ BEGIN
     a = ((4 - b) + (b - 1)) + (4 * 4)
     c = aMinB(b, 4)
     if (c >= 0) THEN
-        c = 1
+        if( c >= 2) THEN
+            c = 1
+        else
+            c = 2
+        end;
     else
-        c = 2
+        c = 3
     end;
     {a = (4 + (2 + 2)) * (3 - 1)
     b = 6

@@ -15,6 +15,8 @@ class Compiler(object):
     def __init__(self, programAST: Program) -> None:
         self.tree = programAST
         self.current_scope = dict()
+        self.push = "\tpush {r0, r1, r2, r3, r4, r5, r6, r7, lr}\n"
+        self.pop = "\tpop {r0, r1, r2, r3, r4, r5, r6, r7, pc}\n"
 
     # visit :: AST -> TextIOWrapper -> str-> Union[int, str]
     def visit(self, node: AST, file: TextIOWrapper, parent: str = "") -> Union[int, str]:
@@ -82,12 +84,12 @@ class Compiler(object):
         file.write("\n")
 
         file.write(f"{parent}_{condition_label}_if:\n")
-        [self.visit(line, file, parent) for line in node.ifBlock]
+        [self.visit(line, file, f"{parent}_{condition_label}_if") for line in node.ifBlock]
         file.write(f"\tBL {parent}_end\n")
         file.write("\n")
 
         file.write(f"{parent}_{condition_label}_else:\n")
-        [self.visit(line, file, parent) for line in node.elseNode]
+        [self.visit(line, file, f"{parent}_{condition_label}_else") for line in node.elseNode]
         file.write(f"\tBL {parent}_end\n")
         file.write("\n")
 
@@ -135,9 +137,9 @@ class Compiler(object):
         [funcNode.varDeclDict.update({arg.value : 0}) for arg in funcNode.argList]
         [self.current_scope.update({var : ((index + 1) * 4)})\
                     for index, var, in enumerate(funcNode.varDeclDict.keys())]
-        file.write(f"\t# {self.current_scope}\n")
 
         # Compile function body
+        file.write(self.push)
         self.compile_LocalScope(self.current_scope, file)
 
         # Store given arguments on stack
@@ -146,6 +148,7 @@ class Compiler(object):
         [self.visit(node, file, funcNode.funcName) for node in funcNode.funcCodeBlock]
         file.write(f"\tLDR R0 [SP, #{self.current_scope['result'] - 4}]  \t# load result val in R0\n")
         self.destruct_LocalScope(self.current_scope, file)
+        file.write(self.pop)
         file.write("\n")
 
         self.current_scope = tmp
@@ -173,9 +176,11 @@ class Compiler(object):
         
         # Compile main
         file.write(f"{node.program_name}:\n")
+        file.write(self.push)
         self.compile_LocalScope(self.current_scope, file)
         [self.visit(node, file, self.tree.program_name) for node in node.compoundStatement]
         self.destruct_LocalScope(self.current_scope, file)
+        file.write(self.pop)
 
     # compile :: str -> None -> str
     def compile(self, outFile: str) -> None:
