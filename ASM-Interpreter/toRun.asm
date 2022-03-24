@@ -1,6 +1,6 @@
 
 aMinB:
-	PUSH {r0, r1, r2, r3, r4, r5, r6, r7, lr}
+	PUSH {r4, r5, r6, r7, lr}
 	SUB SP, SP, #16
 	STR R0, [SP, #8]
 	STR R1, [SP, #12]
@@ -15,10 +15,10 @@ aMinB:
 	STR R0, [SP, #4]
 	LDR R0, [SP, #4]
 	ADD SP, SP, #16
-	POP {r0, r1, r2, r3, r4, r5, r6, r7, pc}
+	POP {r4, r5, r6, r7, pc}
 
 aPlusB:
-	PUSH {r0, r1, r2, r3, r4, r5, r6, r7, lr}
+	PUSH {r4, r5, r6, r7, lr}
 	SUB SP, SP, #12
 	STR R0, [SP, #4]
 	STR R1, [SP, #8]
@@ -30,10 +30,10 @@ aPlusB:
 	STR R0, [SP, #0]
 	LDR R0, [SP, #0]
 	ADD SP, SP, #12
-	POP {r0, r1, r2, r3, r4, r5, r6, r7, pc}
+	POP {r4, r5, r6, r7, pc}
 
 odd:
-	PUSH {r0, r1, r2, r3, r4, r5, r6, r7, lr}
+	PUSH {r4, r5, r6, r7, lr}
 	SUB SP, SP, #12
 	STR R0, [SP, #8]
 	LDR R0, [SP, #8]
@@ -54,16 +54,17 @@ odd_nble0_else:
 	STR R0, [SP, #0]
 	LDR R0, [SP, #0]
 	BL even
+	bl print_int
 	STR R0, [SP, #4]
 	BL odd_end
 
 odd_end:
 	LDR R0, [SP, #4]
 	ADD SP, SP, #12
-	POP {r0, r1, r2, r3, r4, r5, r6, r7, pc}
+	POP {r4, r5, r6, r7, pc}
 
 even:
-	PUSH {r0, r1, r2, r3, r4, r5, r6, r7, lr}
+	PUSH {r4, r5, r6, r7, lr}
 	SUB SP, SP, #12
 	STR R0, [SP, #8]
 	LDR R0, [SP, #8]
@@ -84,16 +85,17 @@ even_nble0_else:
 	STR R0, [SP, #0]
 	LDR R0, [SP, #0]
 	BL odd
+	bl print_int
 	STR R0, [SP, #4]
 	BL even_end
 
 even_end:
 	LDR R0, [SP, #4]
 	ADD SP, SP, #12
-	POP {r0, r1, r2, r3, r4, r5, r6, r7, pc}
+	POP {r4, r5, r6, r7, pc}
 
 _start:
-	PUSH {r0, r1, r2, r3, r4, r5, r6, r7, lr}
+	PUSH {r4, r5, r6, r7, lr}
 	SUB SP, SP, #16
 	MOV R0, #2
 	STR R0, [SP, #4]
@@ -112,6 +114,7 @@ _start:
 	LDR R0, [SP, #0]
 	MOV R1, #4
 	BL aMinB
+	bl print_int
 	STR R0, [SP, #8]
 	LDR R0, [SP, #8]
 	CMP R0, #0
@@ -144,4 +147,4 @@ _start_cbge0_else:
 
 _start_end:
 	ADD SP, SP, #16
-	POP {r0, r1, r2, r3, r4, r5, r6, r7, pc}
+	POP {r4, r5, r6, r7, pc}

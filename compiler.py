@@ -15,8 +15,8 @@ class Compiler(object):
     def __init__(self, programAST: Program) -> None:
         self.tree = programAST
         self.current_scope = dict()
-        self.push = "\tPUSH {r0, r1, r2, r3, r4, r5, r6, r7, lr}\n"
-        self.pop = "\tPOP {r0, r1, r2, r3, r4, r5, r6, r7, pc}\n"
+        self.push = "\tPUSH {r4, r5, r6, r7, lr}\n"
+        self.pop = "\tPOP {r4, r5, r6, r7, pc}\n"
 
     # visit :: AST -> TextIOWrapper -> str-> Union[int, str]
     def visit(self, node: AST, file: TextIOWrapper, parent: str = "") -> Union[int, str]:
@@ -118,6 +118,7 @@ class Compiler(object):
             
             # Branch link to function
             file.write(f"\tBL {func.funcName}\n")
+            file.write(f"\tbl print_int\n")
         except IndexError as e:
             close_matches = " ".join(difflib.get_close_matches(node.funcName, [func.funcName for func in self.tree.funcList]))
             if len(close_matches) != 0:
