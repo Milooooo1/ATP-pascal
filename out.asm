@@ -19,6 +19,7 @@ aMinB:
 	SUB R0 R1 R2
 	STR R0 [SP, #0]  	# c stored
 	LDR R0 [SP, #0]  	# c loaded
+	MOV R0 R0
 	STR R0 [SP, #4]  	# result stored
 	LDR R0 [SP, #4]  	# load result val in R0
 	ADD SP SP #16
@@ -45,8 +46,26 @@ odd:
 	STR R0 [SP, #8]  	# n stored
 	LDR R0 [SP, #8]  	# n loaded
 	CMP R0 #0
-	BLE branchToElse
-	BL branchToIf
+	BLE odd_nble0_if
+	BL odd_nble0_else
+
+odd_nble0_if:
+	MOV R0 #0
+	STR R0 [SP, #4]  	# result stored
+	BL odd_end
+
+odd_nble0_else:
+	LDR R0 [SP, #8]  	# n loaded
+	MOV R1 R0
+	MOV R2 #1
+	SUB R0 R1 R2
+	STR R0 [SP, #0]  	# nMinEen stored
+	LDR R0 [SP, #4]  	# nMinEen loaded
+	BL even
+	STR R0 [SP, #4]  	# result stored
+	BL odd_end
+
+odd_end:
 	LDR R0 [SP, #4]  	# load result val in R0
 	ADD SP SP #12
 
@@ -57,13 +76,32 @@ even:
 	STR R0 [SP, #8]  	# n stored
 	LDR R0 [SP, #8]  	# n loaded
 	CMP R0 #0
-	BLE branchToElse
-	BL branchToIf
+	BLE even_nble0_if
+	BL even_nble0_else
+
+even_nble0_if:
+	MOV R0 #1
+	STR R0 [SP, #4]  	# result stored
+	BL even_end
+
+even_nble0_else:
+	LDR R0 [SP, #8]  	# n loaded
+	MOV R1 R0
+	MOV R2 #1
+	SUB R0 R1 R2
+	STR R0 [SP, #0]  	# nMinEen stored
+	LDR R0 [SP, #4]  	# nMinEen loaded
+	BL odd
+	STR R0 [SP, #4]  	# result stored
+	BL even_end
+
+even_end:
 	LDR R0 [SP, #4]  	# load result val in R0
 	ADD SP SP #12
 
 example:
 	SUB SP SP #16
+	MOV R0 #2
 	STR R0 [SP, #4]  	# b stored
 	MOV R1 #4
 	LDR R0 [SP, #4]  	# b loaded
@@ -81,4 +119,20 @@ example:
 	MOV R1 #4
 	BL aMinB
 	STR R0 [SP, #8]  	# c stored
+	LDR R0 [SP, #8]  	# c loaded
+	CMP R0 #0
+	BGE example_cbge0_if
+	BL example_cbge0_else
+
+example_cbge0_if:
+	MOV R0 #1
+	STR R0 [SP, #8]  	# c stored
+	BL example_end
+
+example_cbge0_else:
+	MOV R0 #2
+	STR R0 [SP, #8]  	# c stored
+	BL example_end
+
+example_end:
 	ADD SP SP #16

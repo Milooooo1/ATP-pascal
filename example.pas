@@ -45,6 +45,12 @@ VAR
 BEGIN
     b = 2
     a = ((4 - b) + (b - 1)) + (4 * 4)
+    c = aMinB(b, 4)
+    if (c >= 0) THEN
+        c = 1
+    else
+        c = 2
+    end;
     {a = (4 + (2 + 2)) * (3 - 1)
     b = 6
     c = 2 + b}
