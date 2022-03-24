@@ -16,6 +16,7 @@ aMinB:
 	MOV R2 R0
 	SUB R0 R1 R2
 	STR R0 [SP, #0]  	# c stored
+	LDR R0 [SP, #0]  	# c loaded
 	STR R0 [SP, #4]  	# result stored
 	LDR R0 [SP, #8]  	# Store result val in R0
 	ADD SP SP #16

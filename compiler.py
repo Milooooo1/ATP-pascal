@@ -71,14 +71,7 @@ class Compiler(object):
     # compile_Assign :: Assign -> TextIOWrapper -> None
     def compile_Assign(self, node: Assign, file: TextIOWrapper) -> None:
         '''Store a var'''
-        res = ""
-        match type(node.right).__name__:
-            case "BinOp":
-                res = self.compile_BinOp(node.right, file)
-                if (res is not None):
-                    file.write(f"\tMOV R0 {res}\n")
-            case "FuncCall":
-                self.compile_FuncCall(node.right, file)
+        self.visit(node.right, file)
         file.write(f"\tSTR R0 [SP, #{self.current_scope[node.left.value] - 4}]  \t# {node.left.value} stored\n")
 
     # compile_FuncCall :: FuncCall -> TextIOWrapper -> None
