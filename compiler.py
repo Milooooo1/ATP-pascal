@@ -68,6 +68,17 @@ class Compiler(object):
             file.write(f"\tMOV R2 {self.visit(node.right, file)}\n")
             file.write(f"\t{opToAsm[node.op.value]} {destRegister} R1 R2\n")
 
+    # compile_Conditional :: Construct -> TextIOWrapper -> None
+    def compile_Conditional(self, node: Conditional, file: TextIOWrapper) -> None:
+        file.write(f"\tCMP {self.visit(node.left, file)} {self.visit(node.right, file)}\n")
+
+    # compile_IfElse :: IfElse -> TextIOWrapper -> None
+    def compile_IfElse(self, node: IfElse, file: TextIOWrapper) -> None:
+        funcToAsm = {"==" : "BEQ",  "!=" : "BNE", "<=" : "BLE",  ">=" : "BGE", "<" : "BLT", ">" : "BHI"}
+        self.visit(node.condition, file)
+        file.write(f"\t{funcToAsm[node.condition.conditional.value]} branchToElse\n")
+        file.write(f"\tBL branchToIf\n")
+
     # compile_Assign :: Assign -> TextIOWrapper -> None
     def compile_Assign(self, node: Assign, file: TextIOWrapper) -> None:
         '''Store a var'''
@@ -78,8 +89,15 @@ class Compiler(object):
     def compile_FuncCall(self, node: FuncCall, file: TextIOWrapper) -> None:
         try:
             # Get the first occurance of the function name
-            func = [i for i in self.tree.funcList if i.funcName == node.funcName][0]  
-            file.write(f"\tbl {func.funcName}\n")
+            func = [i for i in self.tree.funcList if i.funcName == node.funcName][0] 
+            
+            # Pass the arguments by storing them in the scratch registers
+            [file.write(f"\tLDR R{index} [SP, #{self.current_scope[arg.value]}]  \t# {arg.value} loaded\n") if not arg.value.isnumeric() 
+            else file.write(f"\tMOV R{index} #{arg.value}\n")
+            for index, arg in enumerate(node.argList)] 
+            
+            # Branch link to function
+            file.write(f"\tBL {func.funcName}\n")
         except IndexError as e:
             close_matches = " ".join(difflib.get_close_matches(node.funcName, [func.funcName for func in self.tree.funcList]))
             if len(close_matches) != 0:
@@ -99,12 +117,16 @@ class Compiler(object):
         [funcNode.varDeclDict.update({arg.value : 0}) for arg in funcNode.argList]
         [self.current_scope.update({var : ((index + 1) * 4)})\
                     for index, var, in enumerate(funcNode.varDeclDict.keys())]
-        file.write(f"\t{self.current_scope}\n")
+        file.write(f"\t# {self.current_scope}\n")
 
         # Compile function body
         self.compile_LocalScope(self.current_scope, file)
+
+        # Store given arguments on stack
+        [file.write(f"\tSTR R{index} [SP, #{self.current_scope[var.value] - 4}]  \t# {var.value} stored\n") for index, var in enumerate(funcNode.argList)]
+
         [self.visit(node, file) for node in funcNode.funcCodeBlock]
-        file.write(f"\tLDR R0 [SP, #{self.current_scope['result']}]  \t# Store result val in R0\n")
+        file.write(f"\tLDR R0 [SP, #{self.current_scope['result'] - 4}]  \t# load result val in R0\n")
         self.destruct_LocalScope(self.current_scope, file)
         file.write("\n")
 
