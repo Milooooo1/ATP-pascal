@@ -15,8 +15,8 @@ class Compiler(object):
     def __init__(self, programAST: Program) -> None:
         self.tree = programAST
         self.current_scope = dict()
-        self.push = "\tpush {r0, r1, r2, r3, r4, r5, r6, r7, lr}\n"
-        self.pop = "\tpop {r0, r1, r2, r3, r4, r5, r6, r7, pc}\n"
+        self.push = "\tPUSH {r0, r1, r2, r3, r4, r5, r6, r7, lr}\n"
+        self.pop = "\tPOP {r0, r1, r2, r3, r4, r5, r6, r7, pc}\n"
 
     # visit :: AST -> TextIOWrapper -> str-> Union[int, str]
     def visit(self, node: AST, file: TextIOWrapper, parent: str = "") -> Union[int, str]:
@@ -43,7 +43,7 @@ class Compiler(object):
     # compile_Var :: Var -> TextIOWrapper -> str -> str -> str
     def compile_Var(self, node: Var, file: TextIOWrapper, parent: str = "", destRegister: str = 'R0') -> str:
         '''Load a var from the stack'''
-        file.write(f"\tLDR {destRegister} [SP, #{self.current_scope[node.value] - 4}]  \t# {node.value} loaded\n")
+        file.write(f"\tLDR {destRegister}, [SP, #{self.current_scope[node.value] - 4}]\n")
         return destRegister
     
     # compile_BinOp :: BinOp -> TextIOWrapper -> str -> None
@@ -53,26 +53,26 @@ class Compiler(object):
 
         if isinstance(node.left, BinOp) and not isinstance(node.right, BinOp):
             self.compile_BinOp(node.left, file, "")
-            file.write(f"\t{opToAsm[node.op.value]} {destRegister} R0 {self.visit(node.right, file)}\n")
+            file.write(f"\t{opToAsm[node.op.value]} {destRegister}, R0, {self.visit(node.right, file)}\n")
         elif not isinstance(node.left, BinOp) and isinstance(node.right, BinOp):
             self.compile_BinOp(node.right, file, "")
-            file.write(f"\t{opToAsm[node.op.value]} {destRegister} R0 {self.visit(node.left, file)}\n")
+            file.write(f"\t{opToAsm[node.op.value]} {destRegister}, R0, {self.visit(node.left, file)}\n")
         elif isinstance(node.left, BinOp) and isinstance(node.right, BinOp):
             self.compile_BinOp(node.left, file, "", "R3")
             self.compile_BinOp(node.right, file, "", "R4")
-            file.write(f"\t{opToAsm[node.op.value]} {destRegister} R3 R4\n")
+            file.write(f"\t{opToAsm[node.op.value]} {destRegister}, R3, R4\n")
         elif isinstance(node.left, Num) and isinstance(node.right, Num):
             tmp = Interpreter(self.tree)
             res = tmp.visit_BinOp(node)
-            file.write(f"\tMOV {destRegister} #{res}\n")
+            file.write(f"\tMOV {destRegister}, #{res}\n")
         elif not isinstance(node.left, BinOp) and not isinstance(node.right, BinOp):
-            file.write(f"\tMOV R1 {self.visit(node.left, file)}\n")
-            file.write(f"\tMOV R2 {self.visit(node.right, file)}\n")
-            file.write(f"\t{opToAsm[node.op.value]} {destRegister} R1 R2\n")
+            file.write(f"\tMOV R1, {self.visit(node.left, file)}\n")
+            file.write(f"\tMOV R2, {self.visit(node.right, file)}\n")
+            file.write(f"\t{opToAsm[node.op.value]} {destRegister}, R1, R2\n")
 
     # compile_Conditional :: Construct -> TextIOWrapper -> str -> None
     def compile_Conditional(self, node: Conditional, file: TextIOWrapper, parent: str = "") -> None:
-        file.write(f"\tCMP {self.visit(node.left, file)} {self.visit(node.right, file)}\n")
+        file.write(f"\tCMP {self.visit(node.left, file)}, {self.visit(node.right, file)}\n")
 
     # compile_IfElse :: IfElse -> TextIOWrapper -> str -> str -> None
     def compile_IfElse(self, node: IfElse, file: TextIOWrapper, parent: str = "", function: str = "") -> None:
@@ -101,9 +101,9 @@ class Compiler(object):
         # If rhs of assign is a var or constant it needs to be pt into R0
         res = self.visit(node.right, file)
         if(res is not None):
-            file.write(f"\tMOV R0 {res}\n")
+            file.write(f"\tMOV R0, {res}\n")
 
-        file.write(f"\tSTR R0 [SP, #{self.current_scope[node.left.value] - 4}]  \t# {node.left.value} stored\n")
+        file.write(f"\tSTR R0, [SP, #{self.current_scope[node.left.value] - 4}]\n")
 
     # compile_FuncCall :: FuncCall -> TextIOWrapper -> str -> None
     def compile_FuncCall(self, node: FuncCall, file: TextIOWrapper, parent: str = "") -> None:
@@ -112,8 +112,8 @@ class Compiler(object):
             func = [i for i in self.tree.funcList if i.funcName == node.funcName][0] 
             
             # Pass the arguments by storing them in the scratch registers
-            [file.write(f"\tLDR R{index} [SP, #{self.current_scope[arg.value]}]  \t# {arg.value} loaded\n") if not arg.value.isnumeric() 
-            else file.write(f"\tMOV R{index} #{arg.value}\n")
+            [file.write(f"\tLDR R{index}, [SP, #{self.current_scope[arg.value]-4}]\n") if not arg.value.isnumeric() 
+            else file.write(f"\tMOV R{index}, #{arg.value}\n")
             for index, arg in enumerate(node.argList)] 
             
             # Branch link to function
@@ -128,7 +128,7 @@ class Compiler(object):
     # compileFunction :: Func -> TextIOWrapper -> str -> str
     def compile_Func(self, funcNode: Func, file: TextIOWrapper, parent: str = "") -> str:
         '''Compile function'''
-        file.write(".thumb_func\n" + funcNode.funcName + ":\n")
+        file.write(funcNode.funcName + ":\n")
         
         # Update the function scope
         tmp = self.current_scope
@@ -143,10 +143,10 @@ class Compiler(object):
         self.compile_LocalScope(self.current_scope, file)
 
         # Store given arguments on stack
-        [file.write(f"\tSTR R{index} [SP, #{self.current_scope[var.value] - 4}]  \t# {var.value} stored\n") for index, var in enumerate(funcNode.argList)]
+        [file.write(f"\tSTR R{index}, [SP, #{self.current_scope[var.value] - 4}]\n") for index, var in enumerate(funcNode.argList)]
 
         [self.visit(node, file, funcNode.funcName) for node in funcNode.funcCodeBlock]
-        file.write(f"\tLDR R0 [SP, #{self.current_scope['result'] - 4}]  \t# load result val in R0\n")
+        file.write(f"\tLDR R0, [SP, #{self.current_scope['result'] - 4}]\n")
         self.destruct_LocalScope(self.current_scope, file)
         file.write(self.pop)
         file.write("\n")
@@ -155,11 +155,11 @@ class Compiler(object):
 
     # compile_LocalScope :: Dict -> TextIOWrapper -> str -> None
     def compile_LocalScope(self, scope: Dict, file: TextIOWrapper, parent: str = "") -> None:
-        file.write(f"\tSUB SP SP #{max(scope.values())}\n")
+        file.write(f"\tSUB SP, SP, #{max(scope.values())}\n")
 
     # destruct_LocalScope :: Dict -> TextIOWrapper -> None
     def destruct_LocalScope(self, scope: Dict, file: TextIOWrapper) -> None:
-        file.write(f"\tADD SP SP #{max(scope.values())}\n")
+        file.write(f"\tADD SP, SP, #{max(scope.values())}\n")
 
     # compiler_Program :: Program -> TextIOWrapper -> str -> None
     def compile_Program(self, node: Program, file: TextIOWrapper, parent: str = "") -> None:
