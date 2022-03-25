@@ -1,11 +1,3 @@
-	.cpu cortex-m0
-	.text
-	.align 4
-	.global aMinB
-	.global aPlusB
-	.global odd
-	.global even
-
 aMinB:
 	PUSH {r4, r5, r6, r7, lr}
 	SUB SP, SP, #16
@@ -116,15 +108,15 @@ _start:
 	MOV R4, #16
 	ADD R0, R3, R4
 	STR R0, [SP, #0]
-	bl print_int
+	BL print_int
 	LDR R0, [SP, #0]
 	MOV R1, #4
 	BL aMinB
 	STR R0, [SP, #8]
-	bl print_int
+	BL print_int
 	MOV R0, #9
 	BL odd
-	bl print_int
+	BL print_int
 	LDR R0, [SP, #8]
 	CMP R0, #0
 	BGE _start_cbge0_if
@@ -155,6 +147,26 @@ _start_cbge0_else:
 	BL _start_end
 
 _start_end:
-	bl print_int
+	BL print_int
+	MOV R0, #0
+	STR R0, [SP, #8]
+	BL _start_cblt11_while_cond
+
+_start_cblt11_while_cond:
+	LDR R0, [SP, #8]
+	CMP R0, #11
+	BLT _start_cblt11_while_body
+	BL _start_cblt11_while_end
+
+_start_cblt11_while_body:
+	LDR R0, [SP, #8]
+	MOV R1, R0
+	MOV R2, #1
+	ADD R0, R1, R2
+	STR R0, [SP, #8]
+	BL print_int
+	BL _start_cblt11_while_cond
+
+_start_cblt11_while_end:
 	ADD SP, SP, #16
 	POP {r4, r5, r6, r7, pc}

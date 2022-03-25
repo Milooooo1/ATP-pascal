@@ -48,21 +48,26 @@ def main():
             outFileName += ".pas"
 
         compiler.compile(outFileName)
+        os.system(f"cat {outFileName}")
 
         # To be able to use the ASM interpreter we need to make some modifications to the code
         data = []
         with open (outFileName, "r") as myfile:
-            data = myfile.readlines()
+            data += myfile.readlines()
             
+        # Remove initialization
         newFile = ''
-        [newFile := newFile + line if (not ".global" in line or not ".text" in line or not ".text" in line or not ".align" in line or not ".cpu" in line) else '' for line in data]
+        [newFile := newFile + line for line in data]
+        cutOff = newFile[newFile.rfind('.'):].find('\n') + newFile.rfind('.') + 2
+        newFile = newFile[cutOff:]
+
 
         # program name must be _start
         newFile = newFile.replace(PascalAST.program_name, "_start", -1)
         file = open("ASM-Interpreter/toRun.asm", 'w')
         file.write(newFile)
         file.close()
-        print("Running interpreter...")
+        print("\nRunning ASM interpreter...")
         os.system(f"python3.6 ASM-Interpreter/main.py")
         print("Done.")
 

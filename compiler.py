@@ -80,20 +80,35 @@ class Compiler(object):
         self.visit(node.condition, file)
         condition_label = f"{node.condition.left.value}{opToAsm[node.condition.conditional.value].lower()}{node.condition.right.value}"
         file.write(f"\t{opToAsm[node.condition.conditional.value]} {parent}_{condition_label}_if\n")
-        file.write(f"\tBL {parent}_{condition_label}_else\n")
-        file.write("\n")
+        file.write(f"\tBL {parent}_{condition_label}_else\n\n")
 
         file.write(f"{parent}_{condition_label}_if:\n")
         [self.visit(line, file, f"{parent}_{condition_label}_if") for line in node.ifBlock]
-        file.write(f"\tBL {parent}_end\n")
-        file.write("\n")
+        file.write(f"\tBL {parent}_end\n\n")
 
         file.write(f"{parent}_{condition_label}_else:\n")
         [self.visit(line, file, f"{parent}_{condition_label}_else") for line in node.elseNode]
-        file.write(f"\tBL {parent}_end\n")
-        file.write("\n")
+        file.write(f"\tBL {parent}_end\n\n")
 
         file.write(f"{parent}_end:\n")
+
+    # compile_While :: While -> TextIOWrapper -> str -> None
+    def compile_While(self, node: While, file: TextIOWrapper, parent: str = "") -> None:
+        opToAsm = {"==" : "BEQ",  "!=" : "BNE", "<=" : "BLE",  ">=" : "BGE", "<" : "BLT", ">" : "BHI"}
+        condition_label = f"{node.condition.left.value}{opToAsm[node.condition.conditional.value].lower()}{node.condition.right.value}"
+        file.write(f"\tBL {parent}_{condition_label}_while_cond\n\n")
+        file.write(f"{parent}_{condition_label}_while_cond:\n")
+        self.visit(node.condition, file)
+        file.write(f"\t{opToAsm[node.condition.conditional.value]} {parent}_{condition_label}_while_body\n")
+        file.write(f"\tBL {parent}_{condition_label}_while_end\n\n")
+
+        file.write(f"{parent}_{condition_label}_while_body:\n")
+        [self.visit(line, file, f"{parent}_{condition_label}_while_body") for line in node.codeblock]
+        file.write(f"\tBL {parent}_{condition_label}_while_cond\n\n")
+
+        file.write(f"{parent}_{condition_label}_while_end:\n")
+
+
 
     # compile_Assign :: Assign -> TextIOWrapper -> str -> None
     def compile_Assign(self, node: Assign, file: TextIOWrapper, parent: str = "") -> None:
@@ -109,7 +124,7 @@ class Compiler(object):
     def compile_FuncCall(self, node: FuncCall, file: TextIOWrapper, parent: str = "") -> None:
         try:
             if(node.funcName == "printInt"):
-                file.write("\tbl print_int\n")
+                file.write("\tBL print_int\n")
             else:
                 # Get the first occurance of the function name
                 func = [i for i in self.tree.funcList if i.funcName == node.funcName][0] 

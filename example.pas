@@ -60,4 +60,10 @@ BEGIN
         c = 3
     end;
     printInt()
+    c = 0
+    while (c < 11) do
+    begin
+        c = c + 1
+        printInt()
+    end;
 END.
