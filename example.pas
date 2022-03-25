@@ -45,6 +45,7 @@ VAR
 BEGIN
     b = 2
     a = ((4 - b) + (b - 1)) + (4 * 4)
+    printInt()
     c = aMinB(a, 4)
     if (c >= 0) THEN
         if( c >= 2) THEN

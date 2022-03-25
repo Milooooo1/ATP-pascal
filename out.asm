@@ -118,6 +118,7 @@ example:
 	MOV R4, #16
 	ADD R0, R3, R4
 	STR R0, [SP, #0]
+	bl print_int
 	LDR R0, [SP, #0]
 	MOV R1, #4
 	BL aMinB

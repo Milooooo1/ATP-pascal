@@ -108,17 +108,20 @@ class Compiler(object):
     # compile_FuncCall :: FuncCall -> TextIOWrapper -> str -> None
     def compile_FuncCall(self, node: FuncCall, file: TextIOWrapper, parent: str = "") -> None:
         try:
-            # Get the first occurance of the function name
-            func = [i for i in self.tree.funcList if i.funcName == node.funcName][0] 
-            
-            # Pass the arguments by storing them in the scratch registers
-            [file.write(f"\tLDR R{index}, [SP, #{self.current_scope[arg.value]-4}]\n") if not arg.value.isnumeric() 
-            else file.write(f"\tMOV R{index}, #{arg.value}\n")
-            for index, arg in enumerate(node.argList)] 
-            
-            # Branch link to function
-            file.write(f"\tBL {func.funcName}\n")
-            file.write(f"\tbl print_int\n")
+            if(node.funcName == "printInt"):
+                file.write("\tbl print_int\n")
+            else:
+                # Get the first occurance of the function name
+                func = [i for i in self.tree.funcList if i.funcName == node.funcName][0] 
+                
+                # Pass the arguments by storing them in the scratch registers
+                [file.write(f"\tLDR R{index}, [SP, #{self.current_scope[arg.value]-4}]\n") if not arg.value.isnumeric() 
+                else file.write(f"\tMOV R{index}, #{arg.value}\n")
+                for index, arg in enumerate(node.argList)] 
+                
+                # Branch link to function
+                file.write(f"\tBL {func.funcName}\n")
+                file.write(f"\tbl print_int\n")
         except IndexError as e:
             close_matches = " ".join(difflib.get_close_matches(node.funcName, [func.funcName for func in self.tree.funcList]))
             if len(close_matches) != 0:
