@@ -37,7 +37,7 @@ class Interpreter(object):
         '''Assignment function assigns variables their value in the scope dict'''
         if (node.left.value in self.global_scope.keys()):
             self.global_scope[node.left.value] = self.visit(node.right)
-            print(self.global_scope)
+            # print(self.global_scope)
         else:
             raise Exception(f"{node.left.token} was not declared in this scope")
 
@@ -59,6 +59,10 @@ class Interpreter(object):
     # visit_FuncCall :: FuncCall -> Union[int, float]
     def visit_FuncCall(self, node: FuncCall) -> Union[int, float]:
         '''visit_FuncCall will handle any function calls and prosecutes the function'''
+        if node.funcName == "printInt":
+            print(self.global_scope)
+            return 0
+
         tmp = self.global_scope 
         func = [i for i in self.tree.funcList if i.funcName == node.funcName][0]
         
