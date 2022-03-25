@@ -5,6 +5,24 @@ Interpreter and compiler for the Pascal language
 
 [Reference Manual](https://public.support.unisys.com/aseries/docs/clearpath-mcp-17.0/pdf/86000080-103.pdf)
 
+# Gebruik van het programma
+
+Het programma vereist python versie 3.10. Het is ontwikkeld op Linux dus garantie dat eventuele onderdelen op Windows werken is er niet (het gaat hier met name over de uitvoering van shell commands die voorkomen in de compiler).
+
+Om het programma aan te roepen moet je een aantal flags meegeven. Deze zijn:
+
+* -f, --file voor het input bestand
+* -c, --compile voor het compileren
+* -i, --interpret voor het interpreteren
+
+Een mogelijke aanroep ziet er dus als volgt uit
+
+`python3.10 main.py -f example.pas -i` 
+
+of
+
+`python3.10 main.py -f example.pas -c` 
+
 # Interpreter checklist
 
 ## Turing compleet
@@ -40,3 +58,9 @@ Om de werking van het programma inzichtelijk te maken staan er een aantal print 
 Na het printen van de tokens word de tree node van de AST geprint, dit gebeurd ook in main.py (regel 32)
 
 Om te laten zien dat de interpreter werkt word bij elke assignment de locale scope geprint. Dit gebeurd in de interpreter in de visit_Assign functie. Tot slot returned de visit_Program functie "done" wat door de Interpreter.interpret() wordt geprint. Deze print statements zijn allemaal niet nodig en puur hier om te laten zien dat het werkt.
+
+# Compiler checklist
+
+Om mijn compiler te testen maak ik gebruik van [Lennart Janssen](https://github.com/Lennart99/ASM-interpreter) zijn cortex-m0 assembly interpreter. Deze wordt automatisch aangeroepen wanneer je de compiler flag meegeeft aan het programma. Zorg ervoor dat je in de root van dit project zit wanneer je het programma aanroept om eventuele directory errors te voorkomen.
+
+Voor de checklist refereer ik naar de checklist van de Interpreter aangezien hier alle benodigde items al zijn benoemd.

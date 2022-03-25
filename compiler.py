@@ -121,7 +121,6 @@ class Compiler(object):
                 
                 # Branch link to function
                 file.write(f"\tBL {func.funcName}\n")
-                file.write(f"\tbl print_int\n")
         except IndexError as e:
             close_matches = " ".join(difflib.get_close_matches(node.funcName, [func.funcName for func in self.tree.funcList]))
             if len(close_matches) != 0:

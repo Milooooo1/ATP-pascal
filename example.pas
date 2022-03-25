@@ -47,8 +47,11 @@ BEGIN
     a = ((4 - b) + (b - 1)) + (4 * 4)
     printInt()
     c = aMinB(a, 4)
+    printInt()
+    odd(9)
+    printInt()
     if (c >= 0) THEN
-        if( c >= 2) THEN
+        if( c <= 10) THEN
             c = 1
         else
             c = 2
@@ -56,30 +59,5 @@ BEGIN
     else
         c = 3
     end;
-    {a = (4 + (2 + 2)) * (3 - 1)
-    b = 6
-    c = 2 + b}
-    {b = 10
-    c = (2 + 2)
-    c = ((a + b) * (60 / (2 + 8)))
-    c = aMinB(6, 5)
-    WHILE (a < b) DO
-    BEGIN
-        a = a + 1
-    END;
-
-    IF (a < 0) THEN
-        a = (10 + a) / 2
-        a + 2
-    ELSE
-        IF (b > 2) THEN
-            c = (2 / 2) > 6
-        ELSE
-            c = 2
-        END;
-        a = 100
-    END;
-    a = 9
-    b = odd(a)}
-
+    printInt()
 END.

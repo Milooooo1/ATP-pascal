@@ -61,7 +61,6 @@ odd_nble0_else:
 	STR R0, [SP, #0]
 	LDR R0, [SP, #0]
 	BL even
-	bl print_int
 	STR R0, [SP, #4]
 	BL odd_end
 
@@ -92,7 +91,6 @@ even_nble0_else:
 	STR R0, [SP, #0]
 	LDR R0, [SP, #0]
 	BL odd
-	bl print_int
 	STR R0, [SP, #4]
 	BL even_end
 
@@ -122,8 +120,11 @@ _start:
 	LDR R0, [SP, #0]
 	MOV R1, #4
 	BL aMinB
-	bl print_int
 	STR R0, [SP, #8]
+	bl print_int
+	MOV R0, #9
+	BL odd
+	bl print_int
 	LDR R0, [SP, #8]
 	CMP R0, #0
 	BGE _start_cbge0_if
@@ -131,16 +132,16 @@ _start:
 
 _start_cbge0_if:
 	LDR R0, [SP, #8]
-	CMP R0, #2
-	BGE _start_cbge0_if_cbge2_if
-	BL _start_cbge0_if_cbge2_else
+	CMP R0, #10
+	BLE _start_cbge0_if_cble10_if
+	BL _start_cbge0_if_cble10_else
 
-_start_cbge0_if_cbge2_if:
+_start_cbge0_if_cble10_if:
 	MOV R0, #1
 	STR R0, [SP, #8]
 	BL _start_cbge0_if_end
 
-_start_cbge0_if_cbge2_else:
+_start_cbge0_if_cble10_else:
 	MOV R0, #2
 	STR R0, [SP, #8]
 	BL _start_cbge0_if_end
@@ -154,5 +155,6 @@ _start_cbge0_else:
 	BL _start_end
 
 _start_end:
+	bl print_int
 	ADD SP, SP, #16
 	POP {r4, r5, r6, r7, pc}
