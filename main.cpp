@@ -62,7 +62,7 @@ int main(void){
       failed++;
    }
 
-   if(even(8) == 0){
+   if(even(8) == 1){
       passed++;
    } else {
       failed++;
