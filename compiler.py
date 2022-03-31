@@ -184,6 +184,7 @@ class Compiler(object):
         '''Compile the root node (Program node) of the tree'''
         file.write("\t.cpu cortex-m0\n\t.text\n\t.align 4")
         [file.write("\n\t.global " + f.funcName) for f in node.funcList]
+        file.write(f"\n\t.global {node.program_name}")
         file.write("\n\n")
         node.varDeclDict['result'] = 0
         [self.current_scope.update({var : ((index + 1) * 4)})\
